@@ -20,6 +20,7 @@ public class BrandItemTopicCore {
 	Randoms random;
 	CountTables countTables;
 	Assignments assigns;
+	Pair[] allPairs;
 	
 	// sample new topic for adoption (@userIndex, @itemIndex, @adoptIndex) and update count tables respectively
 	public void updateTopic(int cTopic, Adoption adopt, Boolean cDecision, int cBrandIndex)  {
@@ -32,6 +33,21 @@ public class BrandItemTopicCore {
 		int nTopic = sampleNewTopic(userIndex, itemIndex, cDecision, cBrandIndex);
 		countTables.incTopicCount(nTopic, userIndex, itemIndex, cBrandIndex, cDecision);
 		assigns.topic.get(userIndex).set(adoptIndex, nTopic);
+	}
+	
+	public void updatePair(Pair cPair, Adoption adopt, int cTopic) {
+		int adoptIndex = adopt.index; 
+		int userIndex = adopt.userIndex; 
+		int itemIndex = adopt.itemIndex;
+		
+		countTables.decPairCount(cPair, userIndex, itemIndex, cTopic);
+		Pair nPair = sampleNewPair(userIndex, itemIndex, cTopic);
+		countTables.incPairCount(nPair, userIndex, itemIndex, cTopic);
+		
+		int nBrandIndex = nPair.getBrandIndex();
+		assigns.brand.get(userIndex).set(adoptIndex, nBrandIndex);
+		boolean nDecision = nPair.getDecision();
+		assigns.decision.get(userIndex).set(adoptIndex, nDecision);
 	}
 
 	private int sampleNewTopic(int userIndex, int itemIndex, Boolean cDecision, int cBrandIndex) {
@@ -60,26 +76,56 @@ public class BrandItemTopicCore {
 		return nTopic;
 	}
 
-	public void updatePair(Pair cPair, Adoption adopt, int cTopic) {
-		int adoptIndex = adopt.index; 
-		int userIndex = adopt.userIndex; 
-		int itemIndex = adopt.itemIndex;
-		
-		countTables.decPairCount(cPair, userIndex, itemIndex, cTopic);
-		Pair nPair = sampleNewPair(userIndex, itemIndex, cTopic);
-		countTables.incPairCount(nPair, userIndex, itemIndex, cTopic);
-		
-		int nBrandIndex = nPair.getBrandIndex();
-		assigns.brand.get(userIndex).set(adoptIndex, nBrandIndex);
-		boolean nDecision = nPair.getDecision();
-		assigns.decision.get(userIndex).set(adoptIndex, nDecision);
-	}
+	
 
 	private Pair sampleNewPair(int userIndex, int itemIndex, int cTopic) {
 		// TODO Auto-generated method stub
-		return null;
+		double[] weights = estWeights(userIndex, itemIndex, cTopic);
+		int index = random.nextDiscrete(weights, Stats.sum(weights));
+		
+		return allPairs[index];
+	}
+
+	private double[] estWeights(int userIndex, int itemIndex, int cTopic) {
+		
+		double wTopicBased = estTopicBased(userIndex, itemIndex, cTopic);
+		
+		int numBrand = dims.getNumBrand();
+		int numItem = dims.getNumItem();
+		
+		double brandBasedCount = countTables.getUserDecision().get(userIndex, 1);
+		double nom = brandBasedCount + hyperParams.beta;
+		double sumBrand4Topic = countTables.getSumBrand4Topic()[cTopic];
+		double denom = sumBrand4Topic + numBrand * hyperParams.alpha;
+		double scalar = nom/denom;
+		double[] coOccurWithItem = new double[numBrand];
+		for (int bIndex=0; bIndex < numBrand; bIndex++) {
+			if (isBrandOfItem(bIndex, itemIndex)) {
+				double brandItemCount = countTables.getBrandItem().get(bIndex, itemIndex);
+				double bNom = brandItemCount + hyperParams.beta;
+				double marginCountOfBrand = countTables.getMarginCountOfBrand()[bIndex];
+				double bDenom = marginCountOfBrand + numItem * hyperParams.beta;
+				coOccurWithItem[bIndex] = bNom/bDenom;
+			}
+		}
+		RealVector tbCounts = Converters.toVector(countTables.getTopicBrand().get(cTopic));
+		RealVector coOccurs = Converters.arr2Vector(coOccurWithItem);
+		RealVector wBrandBased = tbCounts.mapAdd(hyperParams.alpha).mapMultiply(scalar).ebeMultiply(coOccurs);
+		
+		double[] weights = wBrandBased.append(wTopicBased).toArray();
+		return weights;
 	}
 	
+	private boolean isBrandOfItem(int bIndex, int itemIndex) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	private double estTopicBased(int userIndex, int itemIndex, int cTopic) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
 	private double coOccurProbWithBrand(int tIndex, int brandIndex) {
 		// TODO Auto-generated method stub
 		return 0;

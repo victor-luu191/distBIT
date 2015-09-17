@@ -70,6 +70,22 @@ public class CountTables {
 		return brandItem;
 	}
 
+	public double[] getMarginCountOfUser() {
+		return marginCountOfUser;
+	}
+
+	public double[] getMarginCountOfBrand() {
+		return marginCountOfBrand;
+	}
+
+	public double[] getSumItem4Topic() {
+		return sumItem4Topic;
+	}
+
+	public double[] getSumBrand4Topic() {
+		return sumBrand4Topic;
+	}
+
 	public void decTopicCount(int cTopic, int userIndex, int itemIndex, int cBrandIndex, Boolean cDecision) {
 		
 		userTopic.inc(userIndex, cTopic, -1);
