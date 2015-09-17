@@ -1,26 +1,43 @@
 package bit;
 
 import org.apache.commons.math3.linear.RealVector;
-import org.petuum.jbosen.table.IntTable;
 
 import utils.Converters;
 import utils.Stats;
 import cc.mallet.util.Randoms;
 import defs.Adoption;
 import defs.Assignments;
-import defs.Dimensions;
+import defs.Brand;
 import defs.CountTables;
-import defs.HyperParams;
+import defs.Dimensions;
+import defs.Item;
 import defs.Pair;
+import defs.Priors;
 
 public class BrandItemTopicCore {
 	
 	Dimensions dims;
-	HyperParams hyperParams;
+	Priors priors;
 	Randoms random;
 	CountTables countTables;
 	Assignments assigns;
-	Pair[] allPairs;
+	DataSet ds;
+	Pair[] allPairs = buildPairs();
+	
+	private Pair[] buildPairs() {
+
+		int numBrand = dims.numBrand;
+		Pair[] allPairs = new Pair[numBrand + 1];	// all pairs = { (T, b1), ..., (T, bQ), (F,"no brand") }
+
+		for (int bIndex=0; bIndex < numBrand; bIndex++) {
+
+			allPairs[bIndex] = new Pair(true, bIndex);
+		}
+		int last = allPairs.length - 1;
+		allPairs[last] = new Pair(false, -1);	// bIndex = -1 means no actual brand
+
+		return allPairs;
+	}
 	
 	// sample new topic for adoption (@userIndex, @itemIndex, @adoptIndex) and update count tables respectively
 	public void updateTopic(int cTopic, Adoption adopt, Boolean cDecision, int cBrandIndex)  {
@@ -54,7 +71,7 @@ public class BrandItemTopicCore {
 		
 		RealVector topicCountsOfUser = Converters.toVector(countTables.getUserTopic().get(userIndex));
 		RealVector weights;
-		int numTopic = dims.getNumTopic();
+		int numTopic = dims.numTopic;
 		if (cDecision == false) {// topic-item
 
 			double[] coOccurWithItem = new double[numTopic]; 
@@ -62,7 +79,7 @@ public class BrandItemTopicCore {
 				coOccurWithItem[tIndex] = coOccurProbWithItem(tIndex, itemIndex);
 			}
 
-			weights = topicCountsOfUser.mapAdd(hyperParams.theta).ebeMultiply(Converters.arr2Vector(coOccurWithItem));
+			weights = topicCountsOfUser.mapAdd(priors.theta).ebeMultiply(Converters.arr2Vector(coOccurWithItem));
 
 		} else {// topic-brand-item
 			double[] coOccurWithBrand = new double[numTopic];
@@ -70,16 +87,14 @@ public class BrandItemTopicCore {
 				coOccurWithBrand[tIndex] = coOccurProbWithBrand(tIndex, cBrandIndex);
 			}
 
-			weights = topicCountsOfUser.mapAdd(hyperParams.theta).ebeMultiply(Converters.arr2Vector(coOccurWithBrand));
+			weights = topicCountsOfUser.mapAdd(priors.theta).ebeMultiply(Converters.arr2Vector(coOccurWithBrand));
 		}
 		int nTopic = random.nextDiscrete(weights.toArray(), Stats.sum(weights));
 		return nTopic;
 	}
 
-	
-
 	private Pair sampleNewPair(int userIndex, int itemIndex, int cTopic) {
-		// TODO Auto-generated method stub
+		
 		double[] weights = estWeights(userIndex, itemIndex, cTopic);
 		int index = random.nextDiscrete(weights, Stats.sum(weights));
 		
@@ -90,49 +105,71 @@ public class BrandItemTopicCore {
 		
 		double wTopicBased = estTopicBased(userIndex, itemIndex, cTopic);
 		
-		int numBrand = dims.getNumBrand();
-		int numItem = dims.getNumItem();
+		int numBrand = dims.numBrand;
+		int numItem = dims.numItem;
 		
 		double brandBasedCount = countTables.getUserDecision().get(userIndex, 1);
-		double nom = brandBasedCount + hyperParams.beta;
+		double nom = brandBasedCount + priors.beta;
 		double sumBrand4Topic = countTables.getSumBrand4Topic()[cTopic];
-		double denom = sumBrand4Topic + numBrand * hyperParams.alpha;
+		double denom = sumBrand4Topic + numBrand * priors.alpha;
 		double scalar = nom/denom;
 		double[] coOccurWithItem = new double[numBrand];
 		for (int bIndex=0; bIndex < numBrand; bIndex++) {
 			if (isBrandOfItem(bIndex, itemIndex)) {
 				double brandItemCount = countTables.getBrandItem().get(bIndex, itemIndex);
-				double bNom = brandItemCount + hyperParams.beta;
+				double bNom = brandItemCount + priors.beta;
 				double marginCountOfBrand = countTables.getMarginCountOfBrand()[bIndex];
-				double bDenom = marginCountOfBrand + numItem * hyperParams.beta;
+				double bDenom = marginCountOfBrand + numItem * priors.beta;
 				coOccurWithItem[bIndex] = bNom/bDenom;
 			}
 		}
 		RealVector tbCounts = Converters.toVector(countTables.getTopicBrand().get(cTopic));
 		RealVector coOccurs = Converters.arr2Vector(coOccurWithItem);
-		RealVector wBrandBased = tbCounts.mapAdd(hyperParams.alpha).mapMultiply(scalar).ebeMultiply(coOccurs);
+		RealVector wBrandBased = tbCounts.mapAdd(priors.alpha).mapMultiply(scalar).ebeMultiply(coOccurs);
 		
 		double[] weights = wBrandBased.append(wTopicBased).toArray();
 		return weights;
 	}
 	
 	private boolean isBrandOfItem(int bIndex, int itemIndex) {
-		// TODO Auto-generated method stub
-		return false;
+		
+		Item item = (Item) ds.itemDict.lookupObject(itemIndex);
+		Brand brand = (Brand) ds.brandDict.lookupObject(bIndex);
+		
+		return brand.inProducers(item);
 	}
 
 	private double estTopicBased(int userIndex, int itemIndex, int cTopic) {
-		// TODO Auto-generated method stub
-		return 0;
+		
+		double topicItemCount = countTables.getTopicItem().get(cTopic, itemIndex);
+		double nom = topicItemCount + priors.phi;
+		double marginCountOfTopic = countTables.getSumItem4Topic()[cTopic];
+		double denom = marginCountOfTopic + dims.numItem * priors.phi;
+		double coOccur = nom/denom;
+		double topicBasedCount = countTables.getUserDecision().get(userIndex, 0);
+		
+		return coOccur * (topicBasedCount + priors.gamma);
 	}
 
-	private double coOccurProbWithBrand(int tIndex, int brandIndex) {
-		// TODO Auto-generated method stub
-		return 0;
+	private double coOccurProbWithBrand(int topicIndex, int brandIndex) {
+		
+		double topicBrandCount = countTables.getTopicBrand().get(topicIndex, brandIndex);
+		double nom = topicBrandCount + priors.alpha;
+		double marginCountOfTopic = countTables.getSumBrand4Topic()[topicIndex];
+		double denom = marginCountOfTopic + dims.numBrand * priors.alpha;
+				
+		return nom/denom;
 	}
 
-	private double coOccurProbWithItem(int tIndex, int itemIndex) {
-		// TODO Auto-generated method stub
-		return 0;
+	private double coOccurProbWithItem(int topicIndex, int itemIndex) {
+		
+		double topicItemCount = countTables.getTopicItem().get(topicIndex, itemIndex);
+		double nom = topicItemCount + priors.phi;
+		double marginCountOfTopic = countTables.getSumItem4Topic()[topicIndex];
+		double denom = marginCountOfTopic + dims.numItem * priors.phi;
+		
+		return nom/denom;
 	}
+	
+	
 }
