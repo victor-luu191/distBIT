@@ -12,7 +12,7 @@ import org.petuum.jbosen.table.DoubleTable;
 public class Converters {
 
 	public static RealVector toVector(DoubleRow row) {
-		// TODO Auto-generated method stub
+
 		RealVector v = new ArrayRealVector();
 		DoubleColumnIterator iter = row.iterator();
 		iter.advance();
@@ -28,7 +28,7 @@ public class Converters {
 		return new ArrayRealVector(arr);
 	}
 
-	public static DoubleTable toTable(double[][] arr, int tableId) {
+	public static DoubleTable copy2Table(double[][] arr, int tableId) {
 		int staleness = 0;
 		int numCol = arr[0].length;
 		

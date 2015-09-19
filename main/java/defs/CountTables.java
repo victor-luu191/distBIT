@@ -27,11 +27,11 @@ public class CountTables {
 	public CountTables(double[][] user_topic, double[][] user_decision,
 						double[][] topic_item, double[][] topic_brand, double[][] brand_item) {
 		super();
-		this.userTopic = Converters.toTable(user_topic, userTopicTableId);
-		this.userDecision = Converters.toTable(user_decision, userDecisionTableId);
-		this.topicItem = Converters.toTable(topic_item, topicItemTableId);
-		this.topicBrand = Converters.toTable(topic_brand, topicBrandTableId);
-		this.brandItem = Converters.toTable(brand_item, brandItemTableId);
+		this.userTopic = Converters.copy2Table(user_topic, userTopicTableId);
+		this.userDecision = Converters.copy2Table(user_decision, userDecisionTableId);
+		this.topicItem = Converters.copy2Table(topic_item, topicItemTableId);
+		this.topicBrand = Converters.copy2Table(topic_brand, topicBrandTableId);
+		this.brandItem = Converters.copy2Table(brand_item, brandItemTableId);
 		
 		marginCountOfUser = initMarginCounts(user_topic);
 		sumItem4Topic = initMarginCounts(topic_item);
@@ -42,7 +42,7 @@ public class CountTables {
 	private double[] initMarginCounts(double[][] countTable) {
 		int numRow = countTable.length;
 		double[] marginCounts = new double[numRow];
-		// TODO
+		
 		for (int i = 0; i < marginCounts.length; i++) {
 			marginCounts[i] = Stats.sum(countTable[i]);
 		}

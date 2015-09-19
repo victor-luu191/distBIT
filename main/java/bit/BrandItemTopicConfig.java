@@ -3,7 +3,12 @@ package bit;
 import org.kohsuke.args4j.Option;
 import org.petuum.jbosen.PsConfig;
 
+import defs.Dimensions;
+
 public class BrandItemTopicConfig extends PsConfig {
+	
+	Dimensions dims;
+	
 	@Option(name = "-staleness", required = false, usage = "Staleness of parameter tables. Default = 0")
 	public int staleness = 0;
 
