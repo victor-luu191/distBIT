@@ -4,10 +4,28 @@ import java.util.logging.Logger;
 
 import org.petuum.jbosen.PsApplication;
 import org.petuum.jbosen.PsTableGroup;
+import org.petuum.jbosen.table.DoubleTable;
+
+import defs.CountTables;
+import utils.Converters;
+import utils.Stats;
 
 public class BrandItemTopic extends PsApplication {
 
 	BrandItemTopicConfig config ;
+
+	private double[][] init_user_topic;
+	private double[][] init_user_decision;
+	private double[][] init_topic_item;
+	private double[][] init_topic_brand;
+	private double[][] init_brand_item;
+	
+	CountTables countTables;
+
+	private double[] marginCountOfUser;
+	private double[] sumItem4Topic;
+	private double[] sumBrand4Topic;
+	private double[] marginCountOfBrand;
 	
 	private static final int userTopicTableId = 0;
 	private static final int userDecisionTableId = 1;
@@ -22,6 +40,10 @@ public class BrandItemTopic extends PsApplication {
 		
 	}
 
+	// initialize counts as 2d arrays
+	public void initCounts() {
+		// TODO	
+	}
 
 	@Override
 	public void initialize() {
@@ -37,6 +59,24 @@ public class BrandItemTopic extends PsApplication {
 		PsTableGroup.createDenseDoubleTable(topicItemTableId, staleness, numItem);
 		PsTableGroup.createDenseDoubleTable(topicBrandTableId, staleness, numBrand);
 		PsTableGroup.createDenseDoubleTable(brandItemTableId, staleness, numItem);
+		
+		DoubleTable userTopicTable = PsTableGroup.getDoubleTable(userTopicTableId);
+		DoubleTable userDecisionTable = PsTableGroup.getDoubleTable(userDecisionTableId);
+		DoubleTable topicItemTable = PsTableGroup.getDoubleTable(topicItemTableId);
+		DoubleTable topicBrandTable = PsTableGroup.getDoubleTable(topicBrandTableId);
+		DoubleTable brandItemTable = PsTableGroup.getDoubleTable(brandItemTableId);
+		
+		// copy initialized count arrays into the tables
+		Converters.copy2Table(init_user_topic, userTopicTable);
+		Converters.copy2Table(init_user_decision, userDecisionTable);
+		Converters.copy2Table(init_topic_item, topicItemTable);
+		Converters.copy2Table(init_topic_brand, topicBrandTable);
+		Converters.copy2Table(init_brand_item, brandItemTable);
+		
+		marginCountOfUser = getMarginCounts(init_user_topic);
+		sumItem4Topic = getMarginCounts(init_topic_item);
+		sumBrand4Topic = getMarginCounts(init_topic_brand);
+		marginCountOfBrand = getMarginCounts(init_brand_item);
 	}
 
 
@@ -44,6 +84,17 @@ public class BrandItemTopic extends PsApplication {
 	public void runWorkerThread(int threadId) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	private double[] getMarginCounts(double[][] counts) {
+		int numRow = counts.length;
+		double[] marginCounts = new double[numRow];
+		
+		for (int i = 0; i < marginCounts.length; i++) {
+			marginCounts[i] = Stats.sum(counts[i]);
+		}
+		
+		return marginCounts;
 	}
 
 }

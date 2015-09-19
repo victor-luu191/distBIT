@@ -28,12 +28,9 @@ public class Converters {
 		return new ArrayRealVector(arr);
 	}
 
-	public static DoubleTable copy2Table(double[][] arr, int tableId) {
-		int staleness = 0;
+	public static void copy2Table(double[][] arr, DoubleTable table) {
 		int numCol = arr[0].length;
 		
-		PsTableGroup.createDenseDoubleTable(tableId, staleness, numCol);
-		DoubleTable table = PsTableGroup.getDoubleTable(tableId);
 		int numRow = arr.length;
 		for (int row = 0; row < numRow; row++) {
 			DoubleRowUpdate rowUpdate = new DenseDoubleRowUpdate(numCol);
@@ -42,7 +39,6 @@ public class Converters {
 			}
 			table.inc(row, rowUpdate);
 		}
-		return table;
 	}
 	
 }
