@@ -2,9 +2,14 @@ package bit;
 
 import java.util.logging.Logger;
 
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.petuum.jbosen.PsApplication;
 import org.petuum.jbosen.PsTableGroup;
+import org.petuum.jbosen.row.RowUpdate;
+import org.petuum.jbosen.row.double_.DenseDoubleRow;
 import org.petuum.jbosen.table.DoubleTable;
+import org.petuum.jbosen.table.Table;
 
 import defs.CountTables;
 import utils.Converters;
@@ -14,11 +19,11 @@ public class BrandItemTopic extends PsApplication {
 
 	BrandItemTopicConfig config ;
 
-	private double[][] init_user_topic;
-	private double[][] init_user_decision;
-	private double[][] init_topic_item;
-	private double[][] init_topic_brand;
-	private double[][] init_brand_item;
+	private double[][] init_topicUser;
+	private double[][] init_decisionUser;
+	private double[][] init_itemTopic;
+	private double[][] init_brandTopic;
+	private double[][] init_itemBrand;
 	
 	CountTables countTables;
 
@@ -27,11 +32,11 @@ public class BrandItemTopic extends PsApplication {
 	private double[] sumBrand4Topic;
 	private double[] marginCountOfBrand;
 	
-	private static final int userTopicTableId = 0;
-	private static final int userDecisionTableId = 1;
-	private static final int topicItemTableId = 2;
-	private static final int topicBrandTableId = 3;
-	private static final int brandItemTableId = 4;
+	private static final int topicUserTableId = 0;
+	private static final int decisionUserTableId = 1;
+	private static final int itemTopicTableId = 2;
+	private static final int brandTopicTableId = 3;
+	private static final int itemBrandTableId = 4;
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -54,29 +59,30 @@ public class BrandItemTopic extends PsApplication {
 		int numDecision = 2;
 		int numItem = config.dims.numItem;
 		int numBrand = config.dims.numBrand;
-		PsTableGroup.createDenseDoubleTable(userTopicTableId, staleness, numTopic);
-		PsTableGroup.createDenseDoubleTable(userDecisionTableId, staleness, numDecision);
-		PsTableGroup.createDenseDoubleTable(topicItemTableId, staleness, numItem);
-		PsTableGroup.createDenseDoubleTable(topicBrandTableId, staleness, numBrand);
-		PsTableGroup.createDenseDoubleTable(brandItemTableId, staleness, numItem);
+		PsTableGroup.createDenseDoubleTable(topicUserTableId, staleness, numTopic);
+		PsTableGroup.createDenseDoubleTable(decisionUserTableId, staleness, numDecision);
+		PsTableGroup.createDenseDoubleTable(itemTopicTableId, staleness, numItem);
+		PsTableGroup.createDenseDoubleTable(brandTopicTableId, staleness, numBrand);
+		PsTableGroup.createDenseDoubleTable(itemBrandTableId, staleness, numItem);
 		
-		DoubleTable userTopicTable = PsTableGroup.getDoubleTable(userTopicTableId);
-		DoubleTable userDecisionTable = PsTableGroup.getDoubleTable(userDecisionTableId);
-		DoubleTable topicItemTable = PsTableGroup.getDoubleTable(topicItemTableId);
-		DoubleTable topicBrandTable = PsTableGroup.getDoubleTable(topicBrandTableId);
-		DoubleTable brandItemTable = PsTableGroup.getDoubleTable(brandItemTableId);
+		countTables.topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
+		countTables.decisionUser = PsTableGroup.getDoubleTable(decisionUserTableId);
+		countTables.itemTopic = PsTableGroup.getDoubleTable(itemTopicTableId);
+		countTables.brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
+		countTables.itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
 		
 		// copy initialized count arrays into the tables
-		Converters.copy2Table(init_user_topic, userTopicTable);
-		Converters.copy2Table(init_user_decision, userDecisionTable);
-		Converters.copy2Table(init_topic_item, topicItemTable);
-		Converters.copy2Table(init_topic_brand, topicBrandTable);
-		Converters.copy2Table(init_brand_item, brandItemTable);
+		Converters.copy2Table(init_topicUser, countTables.topicUser);
+		Converters.copy2Table(init_decisionUser, countTables.decisionUser);
+		Converters.copy2Table(init_itemTopic, countTables.itemTopic);
+		Converters.copy2Table(init_brandTopic, countTables.brandTopic);
+		Converters.copy2Table(init_itemBrand, countTables.itemBrand);
 		
-		marginCountOfUser = getMarginCounts(init_user_topic);
-		sumItem4Topic = getMarginCounts(init_topic_item);
-		sumBrand4Topic = getMarginCounts(init_topic_brand);
-		marginCountOfBrand = getMarginCounts(init_brand_item);
+		addMarginCounts(init_topicUser, countTables.topicUser);
+		addMarginCounts(init_decisionUser, countTables.decisionUser);
+		addMarginCounts(init_itemTopic, countTables.itemTopic);
+		addMarginCounts(init_brandTopic, countTables.brandTopic);
+		addMarginCounts(init_itemBrand, countTables.itemBrand);
 	}
 
 
@@ -86,15 +92,16 @@ public class BrandItemTopic extends PsApplication {
 		
 	}
 	
-	private double[] getMarginCounts(double[][] counts) {
+	public static void addMarginCounts(double[][] counts, DoubleTable table) {
+		
+		RealMatrix countMat = new Array2DRowRealMatrix(counts);
+		
 		int numRow = counts.length;
-		double[] marginCounts = new double[numRow];
+		int numCol = counts[0].length;
 		
-		for (int i = 0; i < marginCounts.length; i++) {
-			marginCounts[i] = Stats.sum(counts[i]);
+		for (int i = 0; i < numCol; i++) {
+			table.inc(numRow, i, Stats.sum(countMat.getColumn(i)));
 		}
-		
-		return marginCounts;
 	}
 
 }
