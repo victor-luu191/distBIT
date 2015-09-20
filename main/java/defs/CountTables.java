@@ -38,12 +38,12 @@ public class CountTables {
 		topicUser.inc(dims.numTopic, userIndex, 1);
 		
 		if (cDecision == false) {// topic-item
-			itemTopic.inc(nTopic, itemIndex, 1);
-			sumItem4Topic[nTopic]++;
+			itemTopic.inc(itemIndex, nTopic,  1);
+			itemTopic.inc(dims.numItem, nTopic, 1);
 			
 		} else {// topic-brand-item
-			brandTopic.inc(nTopic, cBrandIndex, 1);
-			sumBrand4Topic[nTopic]++;
+			brandTopic.inc(cBrandIndex, nTopic,  1);
+			brandTopic.inc(dims.numBrand, nTopic, 1);
 		}
 	}
 	
