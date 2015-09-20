@@ -153,9 +153,9 @@ public class BrandItemTopicCore {
 
 	private double coOccurProbWithBrand(int topicIndex, int brandIndex) {
 		
-		double topicBrandCount = countTables.getTopicBrand().get(topicIndex, brandIndex);
+		double topicBrandCount = countTables.brandTopic.get(brandIndex, topicIndex);
 		double nom = topicBrandCount + priors.alpha;
-		double marginCountOfTopic = countTables.getSumBrand4Topic()[topicIndex];
+		double marginCountOfTopic = countTables.brandTopic.get(dims.numBrand, topicIndex);	// getSumBrand4Topic()[topicIndex];
 		double denom = marginCountOfTopic + dims.numBrand * priors.alpha;
 				
 		return nom/denom;
@@ -163,9 +163,9 @@ public class BrandItemTopicCore {
 
 	private double coOccurProbWithItem(int topicIndex, int itemIndex) {
 		
-		double topicItemCount = countTables.getTopicItem().get(topicIndex, itemIndex);
+		double topicItemCount = countTables.itemTopic.get(itemIndex, topicIndex);
 		double nom = topicItemCount + priors.phi;
-		double marginCountOfTopic = countTables.getSumItem4Topic()[topicIndex];
+		double marginCountOfTopic = countTables.itemTopic.get(dims.numItem, topicIndex);	// getSumItem4Topic()[topicIndex];
 		double denom = marginCountOfTopic + dims.numItem * priors.phi;
 		
 		return nom/denom;
