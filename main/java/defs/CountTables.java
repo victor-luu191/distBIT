@@ -2,41 +2,41 @@ package defs;
 
 import org.petuum.jbosen.table.DoubleTable;
 
-import utils.Converters;
-import utils.Stats;
-
 public class CountTables {
+	
+	Dimensions dims;
 	
 	public DoubleTable topicUser; 
 	public DoubleTable decisionUser;
 	public DoubleTable itemTopic; 
 	public DoubleTable brandTopic; 
 	public DoubleTable itemBrand;
-	// margin counts
-	public double[] marginCountOfUser;
-	public double[] marginCountOfBrand;
-	public double[] sumItem4Topic;
-	public double[] sumBrand4Topic;
-
+	
+	private double[] marginCountOfBrand;
+	private double[] sumItem4Topic;
+	private double[] sumBrand4Topic;
+	
+	
 	public void decTopicCount(int cTopic, int userIndex, int itemIndex, int cBrandIndex, Boolean cDecision) {
 		
-		topicUser.inc(userIndex, cTopic, -1);
-		marginCountOfUser[userIndex]--;
+		topicUser.inc(cTopic, userIndex, -1);
+		topicUser.inc(dims.numTopic, userIndex, -1);
 		
 		if (cDecision == false) {// topic-item
-			itemTopic.inc(cTopic, itemIndex, -1);
-			sumItem4Topic[cTopic]-- ;
+			itemTopic.inc(itemIndex, cTopic,  -1);
+			itemTopic.inc(dims.numItem, cTopic, -1);
 		} else {// topic-brand-item
-			brandTopic.inc(cTopic, cBrandIndex, -1);
-			sumBrand4Topic[cTopic]--;
+			brandTopic.inc(cBrandIndex, cTopic, -1);
+			brandTopic.inc(dims.numBrand, cTopic, -1);
 		}
 		
 	}
 	
 	public void incTopicCount(int nTopic, int userIndex, int itemIndex, int cBrandIndex, Boolean cDecision) {
 		
-		topicUser.inc(userIndex, nTopic, 1);
-		marginCountOfUser[userIndex]++;
+		topicUser.inc(nTopic, userIndex,  1);
+		topicUser.inc(dims.numTopic, userIndex, 1);
+		
 		if (cDecision == false) {// topic-item
 			itemTopic.inc(nTopic, itemIndex, 1);
 			sumItem4Topic[nTopic]++;
@@ -49,14 +49,14 @@ public class CountTables {
 	
 	public void decPairCount(Pair cPair, int userIndex, int itemIndex, int cTopic) {
 		
-		marginCountOfUser[userIndex]--;
+		decisionUser.inc(2, userIndex, -1);	// decrease marginal decision counts
 		if (cPair.getDecision() == false) {// currently no brand is used
-			decisionUser.inc(userIndex, 0, -1);
+			decisionUser.inc(0, userIndex,  -1);
 			itemTopic.inc(cTopic, itemIndex, -1);
 			sumItem4Topic[cTopic]--;
 		} 
 		else {//currently brand is used
-			decisionUser.inc(userIndex, 1, -1);
+			decisionUser.inc(1, userIndex,  -1);
 			int cBrandIndex = cPair.getBrandIndex();
 			brandTopic.inc(cTopic, cBrandIndex, -1);
 			sumBrand4Topic[cTopic]--;
@@ -67,7 +67,7 @@ public class CountTables {
 	
 	public void incPairCount(Pair nPair, int userIndex, int itemIndex, int cTopic) {
 
-		marginCountOfUser[userIndex]++;
+		decisionUser.inc(2, userIndex, 1);
 		if (nPair.getDecision() == false) {
 			decisionUser.inc(userIndex, 0, 1);
 			

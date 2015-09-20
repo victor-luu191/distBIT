@@ -27,11 +27,6 @@ public class BrandItemTopic extends PsApplication {
 	
 	CountTables countTables;
 
-	private double[] marginCountOfUser;
-	private double[] sumItem4Topic;
-	private double[] sumBrand4Topic;
-	private double[] marginCountOfBrand;
-	
 	private static final int topicUserTableId = 0;
 	private static final int decisionUserTableId = 1;
 	private static final int itemTopicTableId = 2;
@@ -46,7 +41,7 @@ public class BrandItemTopic extends PsApplication {
 	}
 
 	// initialize counts as 2d arrays
-	public void initCounts() {
+	public void initCounts(DataSet ds) {
 		// TODO	
 	}
 
