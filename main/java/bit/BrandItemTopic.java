@@ -47,7 +47,6 @@ public class BrandItemTopic extends PsApplication {
 
 	@Override
 	public void initialize() {
-		// TODO
 		// create count tables
 		int staleness = 0;
 		int numTopic = config.dims.numTopic;

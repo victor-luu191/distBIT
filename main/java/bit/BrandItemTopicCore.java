@@ -69,7 +69,7 @@ public class BrandItemTopicCore {
 
 	private int sampleNewTopic(int userIndex, int itemIndex, Boolean cDecision, int cBrandIndex) {
 		
-		RealVector topicCountsOfUser = Converters.toVector(countTables.getUserTopic().get(userIndex));
+		RealVector topicCountsOfUser = Converters.toVector(countTables.topicUser.get(userIndex));
 		RealVector weights;
 		int numTopic = dims.numTopic;
 		if (cDecision == false) {// topic-item
@@ -141,12 +141,12 @@ public class BrandItemTopicCore {
 
 	private double estTopicBased(int userIndex, int itemIndex, int cTopic) {
 		
-		double topicItemCount = countTables.getTopicItem().get(cTopic, itemIndex);
+		double topicItemCount = countTables.itemTopic.get(itemIndex, cTopic);
 		double nom = topicItemCount + priors.phi;
-		double marginCountOfTopic = countTables.getSumItem4Topic()[cTopic];
+		double marginCountOfTopic = countTables.itemTopic.get(dims.numItem, cTopic);	// getSumItem4Topic()[cTopic];
 		double denom = marginCountOfTopic + dims.numItem * priors.phi;
 		double coOccur = nom/denom;
-		double topicBasedCount = countTables.decisionUser.get(userIndex, 0);
+		double topicBasedCount = countTables.decisionUser.get(0, userIndex);
 		
 		return coOccur * (topicBasedCount + priors.gamma);
 	}
