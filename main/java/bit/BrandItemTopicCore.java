@@ -108,22 +108,22 @@ public class BrandItemTopicCore {
 		int numBrand = dims.numBrand;
 		int numItem = dims.numItem;
 		
-		double brandBasedCount = countTables.getUserDecision().get(userIndex, 1);
+		double brandBasedCount = countTables.decisionUser.get(1, userIndex);
 		double nom = brandBasedCount + priors.beta;
-		double sumBrand4Topic = countTables.getSumBrand4Topic()[cTopic];
+		double sumBrand4Topic = countTables.brandTopic.get(numBrand, cTopic); 		// getSumBrand4Topic()[cTopic]
 		double denom = sumBrand4Topic + numBrand * priors.alpha;
 		double scalar = nom/denom;
 		double[] coOccurWithItem = new double[numBrand];
 		for (int bIndex=0; bIndex < numBrand; bIndex++) {
 			if (isBrandOfItem(bIndex, itemIndex)) {
-				double brandItemCount = countTables.getBrandItem().get(bIndex, itemIndex);
+				double brandItemCount = countTables.itemBrand.get(itemIndex, bIndex);
 				double bNom = brandItemCount + priors.beta;
-				double marginCountOfBrand = countTables.getMarginCountOfBrand()[bIndex];
+				double marginCountOfBrand = countTables.itemBrand.get(numItem, bIndex); 	// getMarginCountOfBrand()[bIndex];
 				double bDenom = marginCountOfBrand + numItem * priors.beta;
 				coOccurWithItem[bIndex] = bNom/bDenom;
 			}
 		}
-		RealVector tbCounts = Converters.toVector(countTables.getTopicBrand().get(cTopic));
+		RealVector tbCounts = Converters.toVector(countTables.brandTopic.get(cTopic));
 		RealVector coOccurs = Converters.arr2Vector(coOccurWithItem);
 		RealVector wBrandBased = tbCounts.mapAdd(priors.alpha).mapMultiply(scalar).ebeMultiply(coOccurs);
 		
@@ -146,7 +146,7 @@ public class BrandItemTopicCore {
 		double marginCountOfTopic = countTables.getSumItem4Topic()[cTopic];
 		double denom = marginCountOfTopic + dims.numItem * priors.phi;
 		double coOccur = nom/denom;
-		double topicBasedCount = countTables.getUserDecision().get(userIndex, 0);
+		double topicBasedCount = countTables.decisionUser.get(userIndex, 0);
 		
 		return coOccur * (topicBasedCount + priors.gamma);
 	}
