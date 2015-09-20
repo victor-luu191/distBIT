@@ -71,19 +71,23 @@ public class CountTables {
 	
 	public void incPairCount(Pair nPair, int userIndex, int itemIndex, int cTopic) {
 
-		decisionUser.inc(2, userIndex, 1);
+		
 		if (nPair.getDecision() == false) {
-			decisionUser.inc(userIndex, 0, 1);
+			decisionUser.inc(0, userIndex,  1);
+			decisionUser.inc(2, userIndex, 1);	// increment marginal decision counts
 			
-			itemTopic.inc(cTopic, itemIndex, 1);
-			sumItem4Topic[cTopic]++;
+			itemTopic.inc(itemIndex, cTopic,  1);
+			itemTopic.inc(dims.numItem, cTopic, 1);
 		} else {
-			decisionUser.inc(userIndex, 1, 1);
+			decisionUser.inc(1, userIndex,  1);
+			decisionUser.inc(2, userIndex, 1);	// increment marginal decision counts
+			
 			int nBrandIndex = nPair.getBrandIndex();
-			brandTopic.inc(cTopic, nBrandIndex, 1);
-			sumBrand4Topic[cTopic]++;
-			itemBrand.inc(nBrandIndex, itemIndex, 1);
-			marginCountOfBrand[nBrandIndex]++;
+			brandTopic.inc(nBrandIndex, cTopic,  1);
+			brandTopic.inc(dims.numBrand, cTopic, 1);
+			
+			itemBrand.inc(itemIndex, nBrandIndex,  1);
+			itemBrand.inc(dims.numItem, nBrandIndex, 1);
 			
 		}
 	}
