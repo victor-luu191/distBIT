@@ -12,11 +12,6 @@ public class CountTables {
 	public DoubleTable brandTopic; 
 	public DoubleTable itemBrand;
 	
-	private double[] marginCountOfBrand;
-	private double[] sumItem4Topic;
-	private double[] sumBrand4Topic;
-	
-	
 	public void decTopicCount(int cTopic, int userIndex, int itemIndex, int cBrandIndex, Boolean cDecision) {
 		
 		topicUser.inc(cTopic, userIndex, -1);
