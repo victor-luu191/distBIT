@@ -20,7 +20,7 @@ public class BrandItemTopicCore {
 	Priors priors;
 	Randoms random;
 	CountTables countTables;
-	Assignments assigns;
+	private Assignments assigns;
 	DataSet ds;
 	Pair[] allPairs = buildPairs();
 	
@@ -42,18 +42,18 @@ public class BrandItemTopicCore {
 	// sample new topic for adoption (@userIndex, @itemIndex, @adoptIndex) and update count tables respectively
 	public void updateTopic(int cTopic, Adoption adopt, Boolean cDecision, int cBrandIndex)  {
 		
-		int adoptIndex = adopt.index; 
+//		int adoptIndex = adopt.index; 
 		int userIndex = adopt.userIndex; 
 		int itemIndex = adopt.itemIndex;
 		
 		countTables.decTopicCount(cTopic, userIndex, itemIndex, cBrandIndex, cDecision);
 		int nTopic = sampleNewTopic(userIndex, itemIndex, cDecision, cBrandIndex);
 		countTables.incTopicCount(nTopic, userIndex, itemIndex, cBrandIndex, cDecision);
-		assigns.topic.get(userIndex).set(adoptIndex, nTopic);
+//		assigns.topic.get(userIndex).set(adoptIndex, nTopic);
 	}
 	
 	public void updatePair(Pair cPair, Adoption adopt, int cTopic) {
-		int adoptIndex = adopt.index; 
+//		int adoptIndex = adopt.index; 
 		int userIndex = adopt.userIndex; 
 		int itemIndex = adopt.itemIndex;
 		
@@ -61,10 +61,10 @@ public class BrandItemTopicCore {
 		Pair nPair = sampleNewPair(userIndex, itemIndex, cTopic);
 		countTables.incPairCount(nPair, userIndex, itemIndex, cTopic);
 		
-		int nBrandIndex = nPair.getBrandIndex();
-		assigns.brand.get(userIndex).set(adoptIndex, nBrandIndex);
-		boolean nDecision = nPair.getDecision();
-		assigns.decision.get(userIndex).set(adoptIndex, nDecision);
+//		int nBrandIndex = nPair.getBrandIndex();
+//		assigns.brand.get(userIndex).set(adoptIndex, nBrandIndex);
+//		boolean nDecision = nPair.getDecision();
+//		assigns.decision.get(userIndex).set(adoptIndex, nDecision);
 	}
 
 	private int sampleNewTopic(int userIndex, int itemIndex, Boolean cDecision, int cBrandIndex) {
