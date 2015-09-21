@@ -6,7 +6,7 @@ import utils.Converters;
 import utils.Stats;
 import cc.mallet.util.Randoms;
 import defs.Adoption;
-import defs.Assignments;
+import defs.Latent;
 import defs.Brand;
 import defs.CountTables;
 import defs.Dimensions;
@@ -20,7 +20,7 @@ public class BrandItemTopicCore {
 	Priors priors;
 	Randoms random;
 	CountTables countTables;
-	private Assignments assigns;
+	private Latent assigns;
 	DataSet ds;
 	Pair[] allPairs = buildPairs();
 	
