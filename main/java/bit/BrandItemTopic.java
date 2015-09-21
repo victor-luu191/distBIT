@@ -1,22 +1,20 @@
 package bit;
 
-import java.util.logging.Logger;
-
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.petuum.jbosen.PsApplication;
 import org.petuum.jbosen.PsTableGroup;
-import org.petuum.jbosen.row.RowUpdate;
-import org.petuum.jbosen.row.double_.DenseDoubleRow;
 import org.petuum.jbosen.table.DoubleTable;
-import org.petuum.jbosen.table.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import defs.CountTables;
 import utils.Converters;
 import utils.Stats;
+import defs.CountTables;
 
 public class BrandItemTopic extends PsApplication {
 
+	private static final Logger logger = LoggerFactory.getLogger(BrandItemTopic.class);
 	BrandItemTopicConfig config ;
 
 	private double[][] init_topicUser;
@@ -83,6 +81,8 @@ public class BrandItemTopic extends PsApplication {
 	@Override
 	public void runWorkerThread(int threadId) {
 		// TODO Auto-generated method stub
+		int numClients = PsTableGroup.getNumClients();
+		int numThreads = PsTableGroup.getNumLocalWorkerThreads();
 		
 	}
 	

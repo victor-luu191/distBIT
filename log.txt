@@ -1,0 +1,89 @@
+commit 4eba447671f69e2a2104533b3bccec6051c866f7
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 20 21:23:41 2015 +0800
+
+    corrected all remaining methods in BrandItemTopicCore class
+
+commit 11672739f74868a314cf8e51c645946d6ee24570
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 20 21:20:06 2015 +0800
+
+    corrected estTopicBased() in BrandItemTopicCore class
+
+commit 7125a0ea01a7b914d4fbaddcef48da7e0de81342
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 20 18:31:58 2015 +0800
+
+    corrected estWeights() in BrandItemTopicCore class
+
+commit 9ec3b291bfcd6a14e8f6cd01317c3034230d4960
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 20 18:22:08 2015 +0800
+
+    included marginal counts as last row in count tables, removed redundant marginal count vars
+
+commit 0703b8f44977c2b2f143d6352cc1b4521288195f
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 20 18:17:51 2015 +0800
+
+    corrected incPairCount() in CountTables class
+
+commit b6df695c86853f77af5600e11b647d90115876d0
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 20 18:12:00 2015 +0800
+
+    corrected decPairCount() in CountTables class
+
+commit aa406964f7ecbca1fcef1909ad4bb177b175e726
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 20 18:01:51 2015 +0800
+
+    corrected incTopicCount() in CountTables class
+
+commit 904eeb332bf69c986cc58bbfd2b0fb1bc42fbe69
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 20 17:56:09 2015 +0800
+
+    corrected decTopicCount() in CountTables class
+
+commit ba44903df2a505a325c3a4236412d41f5058e625
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 20 00:13:52 2015 +0800
+
+    now last row in each count table contains marginal counts of columns
+
+commit eabe0329623bf876b315a30649843930b3114082
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sat Sep 19 23:01:46 2015 +0800
+
+    change visibility of count tables (fields in CountTables class) to public for cross-pkg access
+
+commit 563ff94fb993bb812b182ca073912757ab251dfb
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sat Sep 19 22:20:00 2015 +0800
+
+    rename Converters.toTable() to Converters.copy2Table
+
+commit bae38315388ba910d540f77e0ea220364a04e4f1
+Author: minhduc <musketeer191@gmail.com>
+Date:   Fri Sep 18 11:27:07 2015 +0800
+
+    filled in details of converters, not tested yet
+
+commit 33de6100ab91f7f8cabee25ff469c13405052258
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 17 20:24:58 2015 +0800
+
+    finished BrandItemTopicCore.java: core methods as well as helpers
+
+commit d9d01cb660b92e52ebdecd80ed237ddc5e7234e5
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 17 15:32:13 2015 +0800
+
+    finished sampling methods in BrandItemTopicCore.java, only helper methods remaining
+
+commit 67f66bc6e2ecaf31eb1bf69f1d050d7366327874
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 17 14:00:53 2015 +0800
+
+    first commit, finished methods for updating counts
