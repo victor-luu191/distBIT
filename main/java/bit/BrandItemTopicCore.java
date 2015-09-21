@@ -21,9 +21,6 @@ public class BrandItemTopicCore {
 	static Randoms random;
 	static DataSet ds;
 	
-	CountTables countTables;
-	private Latent assigns;
-	
 	static Pair[] allPairs = buildPairs();
 	
 	private static Pair[] buildPairs() {
@@ -41,7 +38,13 @@ public class BrandItemTopicCore {
 		return allPairs;
 	}
 	
-	// sample new topic for adoption (@userIndex, @itemIndex, @adoptIndex) and update count tables respectively
+	/**
+	 * sample new topic for adoption {@code adopt},  update count tables and latent vars accordingly
+	 * @param adopt
+	 * @param countTables
+	 * @param latent
+	 * @param dims
+	 */
 	public static void updateTopic(Adoption adopt, CountTables countTables, Latent latent, Dimensions dims)  {
 		//previous arguments: int cTopic, Adoption adopt, Boolean cDecision, int cBrandIndex
 		
@@ -56,7 +59,7 @@ public class BrandItemTopicCore {
 		countTables.decTopicCount(cTopic, userIndex, itemIndex, cBrandIndex, cDecision);
 		int nTopic = sampleNewTopic(userIndex, itemIndex, cDecision, cBrandIndex, countTables, dims);
 		countTables.incTopicCount(nTopic, userIndex, itemIndex, cBrandIndex, cDecision);
-//		assigns.topic.get(userIndex).set(adoptIndex, nTopic);
+		latent.topics.get(userIndex).set(adoptIndex, nTopic);
 	}
 	
 	public static void updatePair(Adoption adopt, CountTables countTables, Latent latent, Dimensions dims) {
@@ -74,10 +77,10 @@ public class BrandItemTopicCore {
 		Pair nPair = sampleNewPair(userIndex, itemIndex, cTopic, countTables, dims);
 		countTables.incPairCount(nPair, userIndex, itemIndex, cTopic);
 		
-//		int nBrandIndex = nPair.getBrandIndex();
-//		assigns.brand.get(userIndex).set(adoptIndex, nBrandIndex);
-//		boolean nDecision = nPair.getDecision();
-//		assigns.decision.get(userIndex).set(adoptIndex, nDecision);
+		int nBrandIndex = nPair.getBrandIndex();
+		latent.brands.get(userIndex).set(adoptIndex, nBrandIndex);
+		int nDecision = nPair.getDecision();
+		latent.decisions.get(userIndex).set(adoptIndex, nDecision);
 	}
 
 	private static int sampleNewTopic(int userIndex, int itemIndex, int cDecision, int cBrandIndex, 

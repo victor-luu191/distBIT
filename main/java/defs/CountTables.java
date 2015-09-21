@@ -44,7 +44,7 @@ public class CountTables {
 	
 	public void decPairCount(Pair cPair, int userIndex, int itemIndex, int cTopic) {
 		
-		if (cPair.getDecision() == false) {// currently no brand is used
+		if (cPair.getDecision() == 0) {// currently no brand is used
 			decisionUser.inc(0, userIndex,  -1);
 			decisionUser.inc(2, userIndex, -1);	// decrease marginal decision counts
 			
@@ -67,7 +67,7 @@ public class CountTables {
 	public void incPairCount(Pair nPair, int userIndex, int itemIndex, int cTopic) {
 
 		
-		if (nPair.getDecision() == false) {
+		if (nPair.getDecision() == 0) {
 			decisionUser.inc(0, userIndex,  1);
 			decisionUser.inc(2, userIndex, 1);	// increment marginal decision counts
 			
