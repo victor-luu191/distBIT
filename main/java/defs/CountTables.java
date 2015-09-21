@@ -12,12 +12,12 @@ public class CountTables {
 	public DoubleTable brandTopic; 
 	public DoubleTable itemBrand;
 	
-	public void decTopicCount(int cTopic, int userIndex, int itemIndex, int cBrandIndex, Boolean cDecision) {
+	public void decTopicCount(int cTopic, int userIndex, int itemIndex, int cBrandIndex, int cDecision) {
 		
 		topicUser.inc(cTopic, userIndex, -1);
 		topicUser.inc(dims.numTopic, userIndex, -1);
 		
-		if (cDecision == false) {// topic-item
+		if (cDecision == 0) {// topic-item
 			itemTopic.inc(itemIndex, cTopic,  -1);
 			itemTopic.inc(dims.numItem, cTopic, -1);
 		} else {// topic-brand-item
@@ -27,12 +27,12 @@ public class CountTables {
 		
 	}
 	
-	public void incTopicCount(int nTopic, int userIndex, int itemIndex, int cBrandIndex, Boolean cDecision) {
+	public void incTopicCount(int nTopic, int userIndex, int itemIndex, int cBrandIndex, int cDecision) {
 		
 		topicUser.inc(nTopic, userIndex,  1);
 		topicUser.inc(dims.numTopic, userIndex, 1);
 		
-		if (cDecision == false) {// topic-item
+		if (cDecision == 0) {// topic-item
 			itemTopic.inc(itemIndex, nTopic,  1);
 			itemTopic.inc(dims.numItem, nTopic, 1);
 			

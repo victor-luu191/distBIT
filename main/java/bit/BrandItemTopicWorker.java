@@ -1,6 +1,7 @@
 package bit;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 import org.petuum.jbosen.PsTableGroup;
@@ -8,6 +9,7 @@ import org.petuum.jbosen.table.IntTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import defs.Adoption;
 import defs.CountTables;
 import defs.Dimensions;
 import defs.Instance;
@@ -24,21 +26,20 @@ public class BrandItemTopicWorker implements Runnable {
     private DataSet trainSet;
     private Dimensions dims;
     
-    CountTables countTables;
+    private CountTables countTables;
 	private int topicUserTableId;
 	private int decisionUserTableId;
 	private int itemTopicTableId;
 	private int brandTopicTableId;
 	private int itemBrandTableId;
 
-	Latent latent;
-	private int topicTableId;
-	private int brandTableId;
-	private int decisionTableId;
-	
+	private Latent latent;
 	private final int  numDecision = 2;
-	Random random;
+	private Random random;
 
+	int userBegin; 
+	int userEnd;
+	
 	public void run() {
 		// TODO 
 		countTables.topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
@@ -47,9 +48,7 @@ public class BrandItemTopicWorker implements Runnable {
 		countTables.brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
 		countTables.itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
 		
-		latent.topics = PsTableGroup.getIntTable(topicTableId);
-		latent.brands = PsTableGroup.getIntTable(brandTableId);
-		latent.decisions = PsTableGroup.getIntTable(decisionTableId);
+		latent = new Latent();
 		
 		int numUserPerWorker = dims.numUser/numWorkers;
 		int userBegin = workerRank * numUserPerWorker;
@@ -60,6 +59,19 @@ public class BrandItemTopicWorker implements Runnable {
 		initTables(countTables, latent, userBegin, userEnd);
 		PsTableGroup.globalBarrier();
 		
+		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+			Instance instance = trainSet.instances.get(uIndex);
+			ArrayList<String> adoptions = instance.getItemIds();
+			
+			for (int adoptIndex = 0; adoptIndex < adoptions.size(); adoptIndex++) {
+				
+				int itemIndex = trainSet.itemDict.lookupIndex(adoptions.get(adoptIndex));
+				Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
+				BrandItemTopicCore.updateTopic(adopt, countTables, latent);
+				
+				
+			}
+		}
 		
 	}
 	/**
@@ -88,6 +100,11 @@ public class BrandItemTopicWorker implements Runnable {
 		
 		Instance instance = trainSet.instances.get(uIndex);
 		ArrayList<String> adoptions = instance.getItemIds();
+		// create lists of latents for adoptions
+		latent.topics.put(uIndex, new ArrayList<Integer>());
+		latent.brands.put(uIndex, new ArrayList<Integer>());
+		latent.decisions.put(uIndex, new ArrayList<Integer>());
+		
 		// Add margin counts to tables topicUser and decisionUser 
 		// both equal to number of adopts of the user
 		countTables.topicUser.inc(dims.numTopic, uIndex, adoptions.size());
@@ -96,21 +113,22 @@ public class BrandItemTopicWorker implements Runnable {
 		for (int i=0; i < adoptions.size(); i++) {
 			int itemIndex = trainSet.itemDict.lookupIndex(adoptions.get(i));
 			int topicIndex = random.nextInt(dims.numTopic);
-			latent.topics.inc(uIndex, itemIndex, topicIndex);	// init topic for adoption (u,i)
+			latent.topics.get(uIndex).add(topicIndex);	// init topic for adoption (u,i)
 			countTables.itemTopic.inc(itemIndex, topicIndex, 1);
 			countTables.itemTopic.inc(dims.numItem, topicIndex, 1);	// inc marginal count
 			
 			int decision = random.nextInt(numDecision);
-			latent.decisions.inc(uIndex, itemIndex, decision);	// init decision for adoption (u,i)
+			latent.decisions.get(uIndex).add(decision);	// init decision for adoption (u,i)
 			
 			if (decision == 0) {// for this adoption, no brand is used
 				countTables.decisionUser.inc(0, uIndex, 1);
-				latent.brands.inc(uIndex, itemIndex, -1);
+				int brandIndex = -1;
+				latent.brands.get(uIndex).add(brandIndex);
 				
 			} else {
 				countTables.decisionUser.inc(1, uIndex, 1);
 				int brandIndex = random.nextInt(dims.numBrand);
-				latent.brands.inc(uIndex, itemIndex, brandIndex);
+				latent.brands.get(uIndex).add(brandIndex);
 				
 				countTables.brandTopic.inc(brandIndex, topicIndex, 1);
 				countTables.brandTopic.inc(dims.numBrand, topicIndex, 1);	// inc marginal count

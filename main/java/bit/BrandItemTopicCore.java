@@ -40,11 +40,15 @@ public class BrandItemTopicCore {
 	}
 	
 	// sample new topic for adoption (@userIndex, @itemIndex, @adoptIndex) and update count tables respectively
-	public void updateTopic(int cTopic, Adoption adopt, Boolean cDecision, int cBrandIndex)  {
+	public static void updateTopic(Adoption adopt, CountTables countTables, Latent latent)  {// int cTopic, Adoption adopt, Boolean cDecision, int cBrandIndex
 		
-//		int adoptIndex = adopt.index; 
+		int adoptIndex = adopt.index; 
 		int userIndex = adopt.userIndex; 
 		int itemIndex = adopt.itemIndex;
+		
+		int cTopic = latent.topics.get(userIndex).get(adoptIndex);
+		int cDecision = latent.decisions.get(userIndex).get(adoptIndex);
+		int cBrandIndex = latent.brands.get(userIndex).get(adoptIndex);
 		
 		countTables.decTopicCount(cTopic, userIndex, itemIndex, cBrandIndex, cDecision);
 		int nTopic = sampleNewTopic(userIndex, itemIndex, cDecision, cBrandIndex);
@@ -67,12 +71,12 @@ public class BrandItemTopicCore {
 //		assigns.decision.get(userIndex).set(adoptIndex, nDecision);
 	}
 
-	private int sampleNewTopic(int userIndex, int itemIndex, Boolean cDecision, int cBrandIndex) {
+	private int sampleNewTopic(int userIndex, int itemIndex, int cDecision, int cBrandIndex) {
 		
 		RealVector topicCountsOfUser = Converters.toVector(countTables.topicUser.get(userIndex));
 		RealVector weights;
 		int numTopic = dims.numTopic;
-		if (cDecision == false) {// topic-item
+		if (cDecision == 0) {// topic-item
 
 			double[] coOccurWithItem = new double[numTopic]; 
 			for (int tIndex=0; tIndex < numTopic; tIndex++) {
