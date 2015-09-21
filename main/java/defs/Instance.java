@@ -6,11 +6,13 @@ public class Instance {
 	public String uId;
 	private ArrayList<String> item_ids;
 
-	public Instance() {
+	public Instance(String uId) {
+		this.uId = uId;
 		setItemIds(new ArrayList<String>());
 	}
 
-	public Instance(ArrayList<String> item_ids) {
+	public Instance(String uId, ArrayList<String> item_ids) {
+		this.uId = uId;
 		this.setItemIds(item_ids);
 	}
 
