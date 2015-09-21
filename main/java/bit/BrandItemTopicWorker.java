@@ -67,9 +67,9 @@ public class BrandItemTopicWorker implements Runnable {
 				
 				int itemIndex = trainSet.itemDict.lookupIndex(adoptions.get(adoptIndex));
 				Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
-				BrandItemTopicCore.updateTopic(adopt, countTables, latent);
-				
-				
+				BrandItemTopicCore.updateTopic(adopt, countTables, latent, dims);
+				BrandItemTopicCore.updatePair(adopt, countTables, latent, dims);
+				// TODO
 			}
 		}
 		

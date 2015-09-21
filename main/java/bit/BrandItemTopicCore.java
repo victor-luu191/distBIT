@@ -16,31 +16,34 @@ import defs.Priors;
 
 public class BrandItemTopicCore {
 	
-	Dimensions dims;
-	Priors priors;
-	Randoms random;
+	static Dimensions dims;
+	static Priors priors;
+	static Randoms random;
+	static DataSet ds;
+	
 	CountTables countTables;
 	private Latent assigns;
-	DataSet ds;
-	Pair[] allPairs = buildPairs();
 	
-	private Pair[] buildPairs() {
+	static Pair[] allPairs = buildPairs();
+	
+	private static Pair[] buildPairs() {
 
 		int numBrand = dims.numBrand;
 		Pair[] allPairs = new Pair[numBrand + 1];	// all pairs = { (T, b1), ..., (T, bQ), (F,"no brand") }
 
 		for (int bIndex=0; bIndex < numBrand; bIndex++) {
 
-			allPairs[bIndex] = new Pair(true, bIndex);
+			allPairs[bIndex] = new Pair(1, bIndex);
 		}
 		int last = allPairs.length - 1;
-		allPairs[last] = new Pair(false, -1);	// bIndex = -1 means no actual brand
+		allPairs[last] = new Pair(0, -1);	// bIndex = -1 means no actual brand
 
 		return allPairs;
 	}
 	
 	// sample new topic for adoption (@userIndex, @itemIndex, @adoptIndex) and update count tables respectively
-	public static void updateTopic(Adoption adopt, CountTables countTables, Latent latent)  {// int cTopic, Adoption adopt, Boolean cDecision, int cBrandIndex
+	public static void updateTopic(Adoption adopt, CountTables countTables, Latent latent, Dimensions dims)  {
+		//previous arguments: int cTopic, Adoption adopt, Boolean cDecision, int cBrandIndex
 		
 		int adoptIndex = adopt.index; 
 		int userIndex = adopt.userIndex; 
@@ -51,18 +54,24 @@ public class BrandItemTopicCore {
 		int cBrandIndex = latent.brands.get(userIndex).get(adoptIndex);
 		
 		countTables.decTopicCount(cTopic, userIndex, itemIndex, cBrandIndex, cDecision);
-		int nTopic = sampleNewTopic(userIndex, itemIndex, cDecision, cBrandIndex);
+		int nTopic = sampleNewTopic(userIndex, itemIndex, cDecision, cBrandIndex, countTables, dims);
 		countTables.incTopicCount(nTopic, userIndex, itemIndex, cBrandIndex, cDecision);
 //		assigns.topic.get(userIndex).set(adoptIndex, nTopic);
 	}
 	
-	public void updatePair(Pair cPair, Adoption adopt, int cTopic) {
-//		int adoptIndex = adopt.index; 
+	public static void updatePair(Adoption adopt, CountTables countTables, Latent latent, Dimensions dims) {
+		// previous arguments: Pair cPair, Adoption adopt, int cTopic
+		int adoptIndex = adopt.index; 
 		int userIndex = adopt.userIndex; 
 		int itemIndex = adopt.itemIndex;
 		
+		int cTopic = latent.topics.get(userIndex).get(adoptIndex);
+		int cDecision = latent.decisions.get(userIndex).get(adoptIndex);
+		int cBrandIndex = latent.brands.get(userIndex).get(adoptIndex);
+		
+		Pair cPair = new Pair(cDecision, cBrandIndex);
 		countTables.decPairCount(cPair, userIndex, itemIndex, cTopic);
-		Pair nPair = sampleNewPair(userIndex, itemIndex, cTopic);
+		Pair nPair = sampleNewPair(userIndex, itemIndex, cTopic, countTables, dims);
 		countTables.incPairCount(nPair, userIndex, itemIndex, cTopic);
 		
 //		int nBrandIndex = nPair.getBrandIndex();
@@ -71,7 +80,8 @@ public class BrandItemTopicCore {
 //		assigns.decision.get(userIndex).set(adoptIndex, nDecision);
 	}
 
-	private int sampleNewTopic(int userIndex, int itemIndex, int cDecision, int cBrandIndex) {
+	private static int sampleNewTopic(int userIndex, int itemIndex, int cDecision, int cBrandIndex, 
+										CountTables countTables, Dimensions dims) {
 		
 		RealVector topicCountsOfUser = Converters.toVector(countTables.topicUser.get(userIndex));
 		RealVector weights;
@@ -80,7 +90,7 @@ public class BrandItemTopicCore {
 
 			double[] coOccurWithItem = new double[numTopic]; 
 			for (int tIndex=0; tIndex < numTopic; tIndex++) {
-				coOccurWithItem[tIndex] = coOccurProbWithItem(tIndex, itemIndex);
+				coOccurWithItem[tIndex] = coOccurProbWithItem(tIndex, itemIndex, countTables);
 			}
 
 			weights = topicCountsOfUser.mapAdd(priors.theta).ebeMultiply(Converters.arr2Vector(coOccurWithItem));
@@ -88,7 +98,7 @@ public class BrandItemTopicCore {
 		} else {// topic-brand-item
 			double[] coOccurWithBrand = new double[numTopic];
 			for (int tIndex=0; tIndex < numTopic; tIndex++) {
-				coOccurWithBrand[tIndex] = coOccurProbWithBrand(tIndex, cBrandIndex);
+				coOccurWithBrand[tIndex] = coOccurProbWithBrand(tIndex, cBrandIndex, countTables);
 			}
 
 			weights = topicCountsOfUser.mapAdd(priors.theta).ebeMultiply(Converters.arr2Vector(coOccurWithBrand));
@@ -97,17 +107,19 @@ public class BrandItemTopicCore {
 		return nTopic;
 	}
 
-	private Pair sampleNewPair(int userIndex, int itemIndex, int cTopic) {
+	private static Pair sampleNewPair(int userIndex, int itemIndex, int cTopic, 
+			CountTables countTables, Dimensions dims) {
 		
-		double[] weights = estWeights(userIndex, itemIndex, cTopic);
+		double[] weights = estWeights(userIndex, itemIndex, cTopic, countTables, dims);
 		int index = random.nextDiscrete(weights, Stats.sum(weights));
 		
 		return allPairs[index];
 	}
 
-	private double[] estWeights(int userIndex, int itemIndex, int cTopic) {
+	private static double[] estWeights(int userIndex, int itemIndex, int cTopic, 
+			CountTables countTables, Dimensions dims) {
 		
-		double wTopicBased = estTopicBased(userIndex, itemIndex, cTopic);
+		double wTopicBased = estTopicBased(userIndex, itemIndex, cTopic, countTables, dims);
 		
 		int numBrand = dims.numBrand;
 		int numItem = dims.numItem;
@@ -135,7 +147,7 @@ public class BrandItemTopicCore {
 		return weights;
 	}
 	
-	private boolean isBrandOfItem(int bIndex, int itemIndex) {
+	private static boolean isBrandOfItem(int bIndex, int itemIndex) {
 		
 		Item item = (Item) ds.itemDict.lookupObject(itemIndex);
 		Brand brand = (Brand) ds.brandDict.lookupObject(bIndex);
@@ -143,7 +155,8 @@ public class BrandItemTopicCore {
 		return brand.inProducers(item);
 	}
 
-	private double estTopicBased(int userIndex, int itemIndex, int cTopic) {
+	private static double estTopicBased(int userIndex, int itemIndex, int cTopic, 
+			CountTables countTables, Dimensions dims) {
 		
 		double topicItemCount = countTables.itemTopic.get(itemIndex, cTopic);
 		double nom = topicItemCount + priors.phi;
@@ -155,7 +168,7 @@ public class BrandItemTopicCore {
 		return coOccur * (topicBasedCount + priors.gamma);
 	}
 
-	private double coOccurProbWithBrand(int topicIndex, int brandIndex) {
+	private static double coOccurProbWithBrand(int topicIndex, int brandIndex, CountTables countTables) {
 		
 		double topicBrandCount = countTables.brandTopic.get(brandIndex, topicIndex);
 		double nom = topicBrandCount + priors.alpha;
@@ -165,7 +178,7 @@ public class BrandItemTopicCore {
 		return nom/denom;
 	}
 
-	private double coOccurProbWithItem(int topicIndex, int itemIndex) {
+	private static double coOccurProbWithItem(int topicIndex, int itemIndex, CountTables countTables) {
 		
 		double topicItemCount = countTables.itemTopic.get(itemIndex, topicIndex);
 		double nom = topicItemCount + priors.phi;
