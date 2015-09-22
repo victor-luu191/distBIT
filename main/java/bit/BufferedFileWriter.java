@@ -22,7 +22,6 @@ public class BufferedFileWriter implements AutoCloseable{
 		this.writer = new BufferedWriter(new OutputStreamWriter(fs.create(outFile, true)));
 	}
 
-	@Override
 	public void close() throws Exception {
 		writer.close();
 	}
