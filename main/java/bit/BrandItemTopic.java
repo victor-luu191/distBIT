@@ -81,7 +81,17 @@ public class BrandItemTopic extends PsApplication {
 		// TODO Auto-generated method stub
 		int numClients = PsTableGroup.getNumClients();
 		int numThreads = PsTableGroup.getNumLocalWorkerThreads();
+		bitConfig.numWorkers = numClients * numThreads;
+		bitConfig.numThreads = numThreads;
 		
+		int workerRank = numThreads * config.clientId + threadId;
+		if (workerRank == 0) {
+			logger.info("Starting " + numClients + " nodes, each with "
+					+ numThreads + " threads.");
+		}
+		
+		BrandItemTopicWorker worker = new BrandItemTopicWorker(bitConfig, workerRank);
+		worker.run();
 	}
 
 }

@@ -63,6 +63,34 @@ public class BrandItemTopicWorker implements Runnable {
 		public String outputPrefix = "";
 	}
 	
+	
+	
+	public BrandItemTopicWorker(Config config, int workerRank) {
+		// TODO Auto-generated constructor stub
+		assert config.numWorkers != -1;
+        this.numWorkers = config.numWorkers;
+
+        assert config.numThreads != -1;
+        this.numThreads = config.numThreads;
+        
+        this.burnIn = config.burnIn;
+        this.numIter = config.numIter;
+        
+        this.staleness = config.staleness;
+        
+        assert config.trainSet != null;
+        this.trainSet = config.trainSet;
+        
+        this.topicUserTableId = config.topicUserId;
+        this.decisionUserTableId = config.decisionUserId;
+        this.itemTopicTableId = config.itemTopicId;
+        this.brandTopicTableId = config.brandTopicId;
+        this.itemBrandTableId = config.itemBrandId;
+        
+        // workerId
+        this.workerRank = workerRank;
+	}
+
 	public void run() {
 		 
 		countTables.topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
