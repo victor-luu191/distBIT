@@ -1,8 +1,11 @@
 package bit;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 import org.petuum.jbosen.PsTableGroup;
@@ -175,11 +178,11 @@ public class BrandItemTopicWorker implements Runnable {
 		}
 	}
 	
-	private void outputCsvToDisk(Distributions distributions, String outputPrefix) {
+	private void outputCsvToDisk(Distributions distributions, String outputPrefix) throws IOException {
 		long diskTimeBegin = System.currentTimeMillis();
+		
 		String fTopicUser = outputPrefix + "_topicUser.csv";
 		write(distributions.topicUser, fTopicUser);
-		
 		String fDecisionUser = outputPrefix + "_decisionUser.csv";
 		write(distributions.decisionUser, fDecisionUser);
 		String fItemTopic = outputPrefix + "_itemTopic.csv";
@@ -188,6 +191,7 @@ public class BrandItemTopicWorker implements Runnable {
 		write(distributions.brandTopic, fBrandTopic);
 		String fItemBrand = outputPrefix + "_itemBrand.csv";
 		write(distributions.itemBrand, fItemBrand);
+		
 		long diskTimeElapsed = System.currentTimeMillis() - diskTimeBegin;
 		logger.info("Finish outputing to " + outputPrefix + " in "
 				+ diskTimeElapsed + " ms");
@@ -212,13 +216,24 @@ public class BrandItemTopicWorker implements Runnable {
 
 
 
-	private void write(double[][] arr, String fName) {
+	private void write(double[][] arr, String fName) throws IOException {
 		// TODO Auto-generated method stub
-		
+		BufferedWriter out = null;
+		try {
+			out = new BufferedWriter(new FileWriter(fName));
+		} catch (IOException e) {
+			logger.error("Caught IOException: " + e.getMessage());
+			System.exit(-1);
+		}
+		for (int r = 0; r < arr.length; r++) {
+			out.write(Arrays.toString(arr[r]) + "\n");
+		}
+		out.close();
 	}
 
 	private void write(DoubleTable table, int numRow, int numCol, String fName)
 			throws IOException, Exception {
+		
 		DecimalFormat doubleFormat = new DecimalFormat("0.###E0");
 		StringBuilder ss = null;
 		String newline = System.getProperty("line.separator");
