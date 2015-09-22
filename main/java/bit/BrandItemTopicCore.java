@@ -45,9 +45,9 @@ public class BrandItemTopicCore {
 	 * @param latent
 	 * @param dims
 	 */
-	public static void updateTopic(Adoption adopt, CountTables countTables, Latent latent, Dimensions dims)  {
-		//previous arguments: int cTopic, Adoption adopt, Boolean cDecision, int cBrandIndex
+	public static void updateTopic(Adoption adopt, CountTables countTables, Latent latent)  {
 		
+		Dimensions dims = countTables.dims;
 		int adoptIndex = adopt.index; 
 		int userIndex = adopt.userIndex; 
 		int itemIndex = adopt.itemIndex;
@@ -62,8 +62,9 @@ public class BrandItemTopicCore {
 		latent.topics.get(userIndex).set(adoptIndex, nTopic);
 	}
 	
-	public static void updatePair(Adoption adopt, CountTables countTables, Latent latent, Dimensions dims) {
-		// previous arguments: Pair cPair, Adoption adopt, int cTopic
+	public static void updatePair(Adoption adopt, CountTables countTables, Latent latent) {
+		
+		Dimensions dims = countTables.dims;
 		int adoptIndex = adopt.index; 
 		int userIndex = adopt.userIndex; 
 		int itemIndex = adopt.itemIndex;

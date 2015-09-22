@@ -23,11 +23,6 @@ public class CountTables {
 		PsTableGroup.createDenseDoubleTable(tableIds.brandTopicId, staleness, dims.numBrand);
 		PsTableGroup.createDenseDoubleTable(tableIds.itemBrandId, staleness, dims.numItem);
 		
-		topicUser = PsTableGroup.getDoubleTable(tableIds.topicUserId);
-		decisionUser = PsTableGroup.getDoubleTable(tableIds.decisionUserId);
-		itemTopic = PsTableGroup.getDoubleTable(tableIds.itemTopicId);
-		brandTopic = PsTableGroup.getDoubleTable(tableIds.brandTopicId);
-		itemBrand = PsTableGroup.getDoubleTable(tableIds.itemBrandId);
 	}
 
 	public void decTopicCount(int cTopic, int userIndex, int itemIndex, int cBrandIndex, int cDecision) {

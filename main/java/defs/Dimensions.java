@@ -11,7 +11,7 @@ public class Dimensions {
 		numUser = 0;
 		numBrand = 0;
 		numItem = 0;
-		numTopic = 0;
+		numTopic = 10;
 	}
 
 	public Dimensions(int numUser, int numBrand, int numItem, int numTopic) {

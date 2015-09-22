@@ -1,19 +1,26 @@
 package bit;
 
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
 import org.petuum.jbosen.PsApplication;
 import org.petuum.jbosen.PsTableGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import defs.CountTables;
+import defs.Dimensions;
 import defs.TableIds;
 
 public class BrandItemTopic extends PsApplication {
 
 	private static final Logger logger = LoggerFactory.getLogger(BrandItemTopic.class);
+	
 	BrandItemTopicConfig config ;
+	BrandItemTopicWorker.Config bitConfig;
 
-	CountTables countTables;
+	private int numUser;
+	private int numBrand;
+	private int numItem;
 
 	private static final int topicUserTableId = 0;
 	private static final int decisionUserTableId = 1;
@@ -21,10 +28,36 @@ public class BrandItemTopic extends PsApplication {
 	private static final int brandTopicTableId = 3;
 	private static final int itemBrandTableId = 4;
 	
+	public BrandItemTopic(BrandItemTopicConfig config) {
+		
+		this.config = config;
+		// TODO: pass global config to each worker 
+		bitConfig = new BrandItemTopicWorker.Config();	// initial config is default config
+		bitConfig.burnIn = config.burnIn;
+		bitConfig.numIter = config.numIter;
+		bitConfig.staleness = config.staleness;
+		
+		bitConfig.topicUserId = topicUserTableId;
+		bitConfig.decisionUserId = decisionUserTableId;
+		bitConfig.itemTopicId = itemTopicTableId;
+		bitConfig.brandTopicId = brandTopicTableId;
+		bitConfig.itemBrandId = itemBrandTableId;
+		
+		bitConfig.outputPrefix = config.outputPrefix;
+		
+	}
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		
-		
+//		final BrandItemTopicConfig  config = new BrandItemTopicConfig();
+//		final CmdLineParser parser = new CmdLineParser(config);
+//		try {
+//			parser.parseArgument(args);
+//		} catch (CmdLineException e) {
+//			logger.error(e.getMessage());
+//			parser.printUsage(System.err);
+//			return;
+//		}
 		
 	}
 
@@ -35,11 +68,11 @@ public class BrandItemTopic extends PsApplication {
 		TableIds tableIds = new TableIds(topicUserTableId, decisionUserTableId, itemTopicTableId, 
 								brandTopicTableId, itemBrandTableId);
 		
-		countTables = new CountTables(tableIds, config.dims, staleness);
+		Dimensions dims = new Dimensions(numUser, numBrand, numItem, config.numTopic);
+		new CountTables(tableIds, dims, staleness);
 		
-		
-		
-		
+		// Configure loss table
+		LossRecorder.createLossTable();
 	}
 
 
