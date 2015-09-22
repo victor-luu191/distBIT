@@ -5,7 +5,6 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Random;
 
-import org.petuum.app.matrixfact.BufferedFileWriter;
 import org.petuum.jbosen.PsTableGroup;
 import org.petuum.jbosen.row.double_.DenseDoubleRow;
 import org.petuum.jbosen.row.double_.DoubleRow;
@@ -16,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import defs.Adoption;
 import defs.CountTables;
 import defs.Dimensions;
+import defs.Distributions;
 import defs.Instance;
 import defs.Latent;
 
@@ -175,16 +175,32 @@ public class BrandItemTopicWorker implements Runnable {
 		}
 	}
 	
-	private void outputCsvToDisk(String outputPrefix) {
-		// TODO Auto-generated method stub
+	private void outputCsvToDisk(Distributions distributions, String outputPrefix) {
 		long diskTimeBegin = System.currentTimeMillis();
+		String fTopicUser = outputPrefix + "_topicUser.csv";
+		write(distributions.topicUser, fTopicUser);
 		
+		String fDecisionUser = outputPrefix + "_decisionUser.csv";
+		write(distributions.decisionUser, fDecisionUser);
+		String fItemTopic = outputPrefix + "_itemTopic.csv";
+		write(distributions.itemTopic, fItemTopic);
+		String fBrandTopic = outputPrefix + "_brandTopic.csv";
+		write(distributions.brandTopic, fBrandTopic);
+		String fItemBrand = outputPrefix + "_itemBrand.csv";
+		write(distributions.itemBrand, fItemBrand);
+		long diskTimeElapsed = System.currentTimeMillis() - diskTimeBegin;
+		logger.info("Finish outputing to " + outputPrefix + " in "
+				+ diskTimeElapsed + " ms");
+		
+		/**
+		 * Later  read/write tables by Hadoop readers/writers to optimize
+		 */
 		// write topicUser table
-		DoubleTable topicUserTable = PsTableGroup.getDoubleTable(topicUserTableId);
-		int numUser = countTables.dims.numUser;
-		int numRow = numTopic;
-		String fName = outputPrefix + ".topicUser.csv";
-		write(topicUserTable, numRow, numUser, fName);
+//		DoubleTable topicUserTable = PsTableGroup.getDoubleTable(topicUserTableId);
+//		int numUser = countTables.dims.numUser;
+//		int numRow = numTopic;
+//		String fName = outputPrefix + ".topicUser.csv";
+//		write(topicUserTable, numRow, numUser, fName);
 		//TODO: write decisionUser table
 		
 		//TODO: write itemTopic table
@@ -195,6 +211,11 @@ public class BrandItemTopicWorker implements Runnable {
 	}
 
 
+
+	private void write(double[][] arr, String fName) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	private void write(DoubleTable table, int numRow, int numCol, String fName)
 			throws IOException, Exception {
@@ -278,13 +299,15 @@ public class BrandItemTopicWorker implements Runnable {
 		// TODO: Add loss evaluation here
 		PsTableGroup.globalBarrier();	// sync all resulting count tables
 		
+		Distributions distributions = countTables.toDistributions();
+		
 		// Print all results.
         if (workerRank == 0) {
             logger.info("\n" + printExpDetails() + "\n" +
                     lossRecorder.printAllLoss());
             if (!outputPrefix.equals("")) {
                 try {
-					outputCsvToDisk(outputPrefix);
+					outputCsvToDisk(distributions, outputPrefix);
 				} catch (Exception e) {
 					logger.error("Failed to output to disk");
 					e.printStackTrace();
