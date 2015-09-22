@@ -115,8 +115,8 @@ public class BrandItemTopicWorker implements Runnable {
 			
 			int itemIndex = trainSet.itemDict.lookupIndex(adoptions.get(adoptIndex));
 			Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
-			BrandItemTopicCore.updateTopic(adopt, countTables, latent);
-			BrandItemTopicCore.updatePair(adopt, countTables, latent);
+			BrandItemTopicCore.updateTopic(adopt, countTables, latent, priors);
+			BrandItemTopicCore.updatePair(adopt, countTables, latent, priors, allPairs);
 		}
 	}
 	
@@ -324,7 +324,7 @@ public class BrandItemTopicWorker implements Runnable {
 		// TODO: Add loss evaluation here
 		PsTableGroup.globalBarrier();	// sync all resulting count tables
 		
-		Distributions distributions = countTables.toDistributions();
+		Distributions distributions = toDistributions(countTables, priors);
 		
 		// Print all results.
         if (workerRank == 0) {
@@ -339,5 +339,39 @@ public class BrandItemTopicWorker implements Runnable {
 				}
             }
         }
+	}
+	
+	public Distributions toDistributions(CountTables countTables, Priors priors) {
+		
+		Dimensions dims = countTables.dims;
+		double[][] topicUserProbs = toProbs(countTables.topicUser, dims.numTopic, dims.numUser, 
+				priors.theta);
+		
+		double[][] decisionUserProbs = toProbs(countTables.decisionUser, Dimensions.numDecision, 
+				dims.numUser, priors.gamma);
+		
+		double[][] itemTopicProbs = toProbs(countTables.itemTopic, dims.numItem, dims.numTopic,
+				priors.phi);
+		
+		double[][] brandTopicProbs = toProbs(countTables.brandTopic, dims.numBrand, dims.numTopic,
+				priors.alpha);
+		
+		double[][] itemBrandProbs = toProbs(countTables.itemBrand, dims.numItem, dims.numBrand,
+				priors.beta);
+
+		return new Distributions(topicUserProbs, decisionUserProbs, itemTopicProbs, brandTopicProbs, itemBrandProbs);
+	}
+
+	private double[][] toProbs(DoubleTable counts, int numRow, int numCol, double prior) {
+		// TODO Auto-generated method stub
+		double[][] probs = new double[numRow][numCol];
+		for (int i = 0; i < numCol; i++) {
+			double marginCount = counts.get(numRow, i);
+			for (int j = 0; j < numRow; j++) {
+
+			}
+		}
+
+		return probs;
 	}
 }
