@@ -1,11 +1,9 @@
 package bit;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Random;
 
 import org.petuum.jbosen.PsTableGroup;
-import org.petuum.jbosen.table.IntTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +12,6 @@ import defs.CountTables;
 import defs.Dimensions;
 import defs.Instance;
 import defs.Latent;
-import defs.TableIds;
 
 public class BrandItemTopicWorker implements Runnable {
 
@@ -33,12 +30,15 @@ public class BrandItemTopicWorker implements Runnable {
 	private int itemBrandTableId;
 	private Dimensions dims;
 	private CountTables countTables;
+	private String outputPrefix;
 	
 	// local objects
 	private int workerRank;
 	private int userBegin; 
 	private int userEnd;
 	private Latent latent;
+
+	private LossRecorder lossRecorder = new LossRecorder();
 	
 	public static class Config {
 		public int numWorkers = -1;
@@ -95,8 +95,34 @@ public class BrandItemTopicWorker implements Runnable {
 				PsTableGroup.clock();
 			}
 		}
+		// TODO: Add loss evaluation here
+		PsTableGroup.globalBarrier();
+		
+		// Print all results.
+        if (workerRank == 0) {
+            logger.info("\n" + printExpDetails() + "\n" +
+                    lossRecorder.printAllLoss());
+            if (!outputPrefix.equals("")) {
+                try {
+					outputCsvToDisk(outputPrefix);
+				} catch (Exception e) {
+					logger.error("Failed to output to disk");
+					e.printStackTrace();
+				}
+            }
+        }
+	}
+	
+	private void outputCsvToDisk(String outputPrefix) {
+		// TODO Auto-generated method stub
 		
 	}
+
+	private String printExpDetails() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
 	/**
 	 * Initialize a partition of count tables, this partition corresponds to users from {@code userBegin} 
 	 * to {@code userEnd}.
