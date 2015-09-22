@@ -1,5 +1,6 @@
 package defs;
 
+import org.petuum.jbosen.PsTableGroup;
 import org.petuum.jbosen.table.DoubleTable;
 
 public class CountTables {
@@ -12,6 +13,23 @@ public class CountTables {
 	public DoubleTable brandTopic; 
 	public DoubleTable itemBrand;
 	
+	public CountTables(TableIds tableIds, Dimensions dims, int staleness) {
+		
+		this.dims = dims;
+		// Config count tables
+		PsTableGroup.createDenseDoubleTable(tableIds.topicUserId, staleness, dims.numTopic);
+		PsTableGroup.createDenseDoubleTable(tableIds.decisionUserId, staleness, Dimensions.numDecision);
+		PsTableGroup.createDenseDoubleTable(tableIds.itemTopicId, staleness, dims.numItem);
+		PsTableGroup.createDenseDoubleTable(tableIds.brandTopicId, staleness, dims.numBrand);
+		PsTableGroup.createDenseDoubleTable(tableIds.itemBrandId, staleness, dims.numItem);
+		
+		topicUser = PsTableGroup.getDoubleTable(tableIds.topicUserId);
+		decisionUser = PsTableGroup.getDoubleTable(tableIds.decisionUserId);
+		itemTopic = PsTableGroup.getDoubleTable(tableIds.itemTopicId);
+		brandTopic = PsTableGroup.getDoubleTable(tableIds.brandTopicId);
+		itemBrand = PsTableGroup.getDoubleTable(tableIds.itemBrandId);
+	}
+
 	public void decTopicCount(int cTopic, int userIndex, int itemIndex, int cBrandIndex, int cDecision) {
 		
 		topicUser.inc(cTopic, userIndex, -1);

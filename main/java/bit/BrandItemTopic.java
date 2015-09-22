@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import defs.CountTables;
+import defs.TableIds;
 
 public class BrandItemTopic extends PsApplication {
 
@@ -29,17 +30,14 @@ public class BrandItemTopic extends PsApplication {
 
 	@Override
 	public void initialize() {
-		// Configure count tables (containers of counts) with proper sizes
+		// Configure count tables (containers of counts) with proper dimensions
 		int staleness = 0;
-		int numTopic = config.dims.numTopic;
-		int numDecision = 2;
-		int numItem = config.dims.numItem;
-		int numBrand = config.dims.numBrand;
-		PsTableGroup.createDenseDoubleTable(topicUserTableId, staleness, numTopic);
-		PsTableGroup.createDenseDoubleTable(decisionUserTableId, staleness, numDecision);
-		PsTableGroup.createDenseDoubleTable(itemTopicTableId, staleness, numItem);
-		PsTableGroup.createDenseDoubleTable(brandTopicTableId, staleness, numBrand);
-		PsTableGroup.createDenseDoubleTable(itemBrandTableId, staleness, numItem);
+		TableIds tableIds = new TableIds(topicUserTableId, decisionUserTableId, itemTopicTableId, 
+								brandTopicTableId, itemBrandTableId);
+		
+		countTables = new CountTables(tableIds, config.dims, staleness);
+		
+		
 		
 		
 	}
