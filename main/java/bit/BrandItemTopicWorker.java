@@ -1,9 +1,15 @@
 package bit;
 
+import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Random;
 
+import org.petuum.app.matrixfact.BufferedFileWriter;
 import org.petuum.jbosen.PsTableGroup;
+import org.petuum.jbosen.row.double_.DenseDoubleRow;
+import org.petuum.jbosen.row.double_.DoubleRow;
+import org.petuum.jbosen.table.DoubleTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,7 +177,50 @@ public class BrandItemTopicWorker implements Runnable {
 	
 	private void outputCsvToDisk(String outputPrefix) {
 		// TODO Auto-generated method stub
+		long diskTimeBegin = System.currentTimeMillis();
 		
+		// write topicUser table
+		DoubleTable topicUserTable = PsTableGroup.getDoubleTable(topicUserTableId);
+		int numUser = countTables.dims.numUser;
+		int numRow = numTopic;
+		String fName = outputPrefix + ".topicUser.csv";
+		write(topicUserTable, numRow, numUser, fName);
+		//TODO: write decisionUser table
+		
+		//TODO: write itemTopic table
+		
+		//TODO: write brandTopic table
+		
+		//TODO: write itemBrand table
+	}
+
+
+
+	private void write(DoubleTable table, int numRow, int numCol, String fName)
+			throws IOException, Exception {
+		DecimalFormat doubleFormat = new DecimalFormat("0.###E0");
+		StringBuilder ss = null;
+		String newline = System.getProperty("line.separator");
+		BufferedFileWriter out = null;
+		ss = new StringBuilder();
+		try {
+			
+			out = new BufferedFileWriter(fName);
+		} catch (IOException e) {
+			logger.error("Caught IOException: " + e.getMessage());
+			System.exit(-1);
+		}
+		DoubleRow rowCache = new DenseDoubleRow(numCol);
+		for (int i = 0; i < numRow; ++i) {
+			rowCache = table.get(i);
+			for (int k = 0; k < numCol - 1; ++k) {
+				ss.append(doubleFormat.format(rowCache.get(k)) + ",");
+			}
+			// no comma
+			ss.append(doubleFormat.format(rowCache.get(numCol - 1))).append(newline);
+		}
+		out.write(ss.toString());
+		out.close();
 	}
 
 	private String printExpDetails() {
