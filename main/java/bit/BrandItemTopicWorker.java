@@ -22,6 +22,7 @@ public class BrandItemTopicWorker implements Runnable {
     private int numThreads;
     private int burnIn;
     private int numIter;
+    private int numTopic;
 	private int staleness;
     private DataSet trainSet;
     private int topicUserTableId;
@@ -29,7 +30,6 @@ public class BrandItemTopicWorker implements Runnable {
 	private int itemTopicTableId;
 	private int brandTopicTableId;
 	private int itemBrandTableId;
-	private Dimensions dims;
 	private CountTables countTables;
 	private String outputPrefix;
 	
@@ -40,7 +40,7 @@ public class BrandItemTopicWorker implements Runnable {
 	private Latent latent;
 
 	private LossRecorder lossRecorder = new LossRecorder();
-	
+
 	public static class Config {
 		public int numWorkers = -1;
         // Worker's rank among all threads across all nodes.
@@ -59,11 +59,9 @@ public class BrandItemTopicWorker implements Runnable {
 //		private TableIds tableIds = new TableIds(topicUserId, decisionUserId, itemTopicId, 
 //													brandTopicId, itemBrandId);
 		
-		public Dimensions dims = new Dimensions();
+		public int numTopic = 10;
 		public String outputPrefix = "";
 	}
-	
-	
 	
 	public BrandItemTopicWorker(Config config, int workerRank) {
 		// TODO Auto-generated constructor stub
@@ -91,62 +89,7 @@ public class BrandItemTopicWorker implements Runnable {
         this.workerRank = workerRank;
 	}
 
-	public void run() {
-		 
-		countTables.topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
-		countTables.decisionUser = PsTableGroup.getDoubleTable(decisionUserTableId);
-		countTables.itemTopic = PsTableGroup.getDoubleTable(itemTopicTableId);
-		countTables.brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
-		countTables.itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
-		
-		latent = new Latent();
-		int numUser = countTables.dims.numUser;
-		int numUserPerWorker = numUser/numWorkers;
-		userBegin = workerRank * numUserPerWorker;
-		userEnd = (workerRank == numWorkers - 1)? numUser : (userBegin + numUserPerWorker);
-		
-		// Since each thread initialize part of count tables, use barrier to
-        // ensure initialization completes.
-		initTables(countTables, latent, userBegin, userEnd);
-		PsTableGroup.globalBarrier();
-		
-		// Burn-in period
-		for (int iter=0; iter < burnIn; iter++) {
-			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-				Instance instance = trainSet.instances.get(uIndex);
-				ArrayList<String> adoptions = instance.getItemIds();
-				updateLatents(adoptions, uIndex);
-				PsTableGroup.clock();
-			}
-		}
-		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
-		
-		// Actual training period
-		for (int iter=0; iter < numIter; iter++) {
-			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-				Instance instance = trainSet.instances.get(uIndex);
-				ArrayList<String> adoptions = instance.getItemIds();
-				updateLatents(adoptions, uIndex);
-				PsTableGroup.clock();
-			}
-		}
-		// TODO: Add loss evaluation here
-		PsTableGroup.globalBarrier();	// sync all resulting count tables
-		
-		// Print all results.
-        if (workerRank == 0) {
-            logger.info("\n" + printExpDetails() + "\n" +
-                    lossRecorder.printAllLoss());
-            if (!outputPrefix.equals("")) {
-                try {
-					outputCsvToDisk(outputPrefix);
-				} catch (Exception e) {
-					logger.error("Failed to output to disk");
-					e.printStackTrace();
-				}
-            }
-        }
-	}
+	
 
 	private void updateLatents(ArrayList<String> adoptions, int uIndex) {
 		for (int adoptIndex = 0; adoptIndex < adoptions.size(); adoptIndex++) {
@@ -156,16 +99,6 @@ public class BrandItemTopicWorker implements Runnable {
 			BrandItemTopicCore.updateTopic(adopt, countTables, latent);
 			BrandItemTopicCore.updatePair(adopt, countTables, latent);
 		}
-	}
-	
-	private void outputCsvToDisk(String outputPrefix) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	private String printExpDetails() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 	
 	/**
@@ -236,4 +169,78 @@ public class BrandItemTopicWorker implements Runnable {
 		}
 	}
 	
+	private void outputCsvToDisk(String outputPrefix) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private String printExpDetails() {
+		String exp = "";
+        exp += "staleness: " + staleness + "\n";
+        exp += "numClients: " + numWorkers / numThreads + "\n";
+        exp += "numWorkers: " + numWorkers + "\n";
+        exp += "numThreads: " + numThreads + "\n";
+        exp += "burnIn: " + burnIn + "\n";
+        exp += "numIter: " + numIter + "\n";
+        exp += "numTopic: " + numTopic + "\n";
+        
+        return exp;
+	}
+	
+	public void run() {
+		 
+		countTables.topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
+		countTables.decisionUser = PsTableGroup.getDoubleTable(decisionUserTableId);
+		countTables.itemTopic = PsTableGroup.getDoubleTable(itemTopicTableId);
+		countTables.brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
+		countTables.itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
+		
+		latent = new Latent();
+		int numUser = countTables.dims.numUser;
+		int numUserPerWorker = numUser/numWorkers;
+		userBegin = workerRank * numUserPerWorker;
+		userEnd = (workerRank == numWorkers - 1)? numUser : (userBegin + numUserPerWorker);
+		
+		// Since each thread initialize part of count tables, use barrier to
+        // ensure initialization completes.
+		initTables(countTables, latent, userBegin, userEnd);
+		PsTableGroup.globalBarrier();
+		
+		// Burn-in period
+		for (int iter=0; iter < burnIn; iter++) {
+			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+				Instance instance = trainSet.instances.get(uIndex);
+				ArrayList<String> adoptions = instance.getItemIds();
+				updateLatents(adoptions, uIndex);
+				PsTableGroup.clock();
+			}
+		}
+		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
+		
+		// Actual training period
+		for (int iter=0; iter < numIter; iter++) {
+			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+				Instance instance = trainSet.instances.get(uIndex);
+				ArrayList<String> adoptions = instance.getItemIds();
+				updateLatents(adoptions, uIndex);
+				PsTableGroup.clock();
+			}
+		}
+		// TODO: Add loss evaluation here
+		PsTableGroup.globalBarrier();	// sync all resulting count tables
+		
+		// Print all results.
+        if (workerRank == 0) {
+            logger.info("\n" + printExpDetails() + "\n" +
+                    lossRecorder.printAllLoss());
+            if (!outputPrefix.equals("")) {
+                try {
+					outputCsvToDisk(outputPrefix);
+				} catch (Exception e) {
+					logger.error("Failed to output to disk");
+					e.printStackTrace();
+				}
+            }
+        }
+	}
 }
