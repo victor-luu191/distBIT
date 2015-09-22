@@ -7,6 +7,18 @@ public class Priors {
 	public double theta ;	// user-topic prior
 	public double phi ;	// topic-item prior
 	
+	
+	
+	public Priors() {
+		alpha = 0.1;
+		beta = 0.1;
+		gamma = 0.1;
+		theta = 0.1;
+		phi = 0.1;
+	}
+
+
+
 	public Priors(double alpha, double beta, double gamma, double theta,
 			double phi) {
 		super();

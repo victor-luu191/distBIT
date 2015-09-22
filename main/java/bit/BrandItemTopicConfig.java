@@ -3,9 +3,10 @@ package bit;
 import org.kohsuke.args4j.Option;
 import org.petuum.jbosen.PsConfig;
 
+import defs.Pair;
+import defs.Priors;
+
 public class BrandItemTopicConfig extends PsConfig {
-	
-	
 	
 	@Option(name = "-staleness", required = false, usage = "Staleness of parameter tables. Default = 0")
 	public int staleness = 0;
@@ -27,7 +28,25 @@ public class BrandItemTopicConfig extends PsConfig {
 	
 	@Option(name = "-outputPrefix", required = false, usage = "Output to outputPrefix.")
 	public String outputPrefix = "";
-
+	
+	@Option(name = "-alpha", required = false, usage = "topic-brand prior")
+	public double alpha = 0.1;
+	
+	@Option(name = "-beta", required = false, usage = "brand-item prior")
+	public double beta = 0.1; 
+	
+	@Option(name = "-gamma", required = false, usage = "user-decision prior")
+	public double gamma = 0.1;	// correct default? 
+	
+	@Option(name = "-theta", required = false, usage = "user-topic prior")
+	public double theta = 0.1; 
+	
+	@Option(name = "-phi", required = false, usage = "topic-item prior")
+	public double phi = 0.1; 
+	
+	public Priors priors = new Priors(alpha, beta, gamma, theta, phi);
+	
+	Pair[] allPairs;
 	
 //	@Option(name = "-snapshot", required = false, usage = "Length of each snapshot. Default = 50")
 //	public int snapshot = 50;

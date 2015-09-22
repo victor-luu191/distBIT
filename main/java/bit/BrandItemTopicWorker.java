@@ -21,6 +21,8 @@ import defs.Dimensions;
 import defs.Distributions;
 import defs.Instance;
 import defs.Latent;
+import defs.Pair;
+import defs.Priors;
 
 public class BrandItemTopicWorker implements Runnable {
 
@@ -40,6 +42,7 @@ public class BrandItemTopicWorker implements Runnable {
 	private int brandTopicTableId;
 	private int itemBrandTableId;
 	private CountTables countTables;
+	private Priors priors;
 	private String outputPrefix;
 	
 	// local objects
@@ -47,6 +50,7 @@ public class BrandItemTopicWorker implements Runnable {
 	private int userBegin; 
 	private int userEnd;
 	private Latent latent;
+	private Pair[] allPairs;
 
 	private LossRecorder lossRecorder = new LossRecorder();
 
@@ -68,8 +72,10 @@ public class BrandItemTopicWorker implements Runnable {
 //		private TableIds tableIds = new TableIds(topicUserId, decisionUserId, itemTopicId, 
 //													brandTopicId, itemBrandId);
 		
+		public Priors priors = new Priors();
 		public int numTopic = 10;
 		public String outputPrefix = "";
+		public Pair[] allPairs = new Pair[0];
 	}
 	
 	public BrandItemTopicWorker(Config config, int workerRank) {
@@ -82,6 +88,7 @@ public class BrandItemTopicWorker implements Runnable {
         
         this.burnIn = config.burnIn;
         this.numIter = config.numIter;
+        this.numTopic = config.numTopic;
         
         this.staleness = config.staleness;
         
@@ -93,6 +100,9 @@ public class BrandItemTopicWorker implements Runnable {
         this.itemTopicTableId = config.itemTopicId;
         this.brandTopicTableId = config.brandTopicId;
         this.itemBrandTableId = config.itemBrandId;
+        
+        this.priors = config.priors;
+        this.allPairs = config.allPairs;
         
         // workerId
         this.workerRank = workerRank;

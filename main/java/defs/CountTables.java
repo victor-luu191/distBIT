@@ -101,7 +101,26 @@ public class CountTables {
 	}
 
 	public Distributions toDistributions() {
+		
+		double[][] topicUserProbs = toProbs(topicUser, dims.numTopic, dims.numUser, );
+		double[][] decisionUserProbs = toProbs(decisionUser, Dimensions.numDecision, dims.numUser);
+		double[][] itemTopicProbs = toProbs(itemTopic, dims.numItem, dims.numTopic);
+		double[][] brandTopicProbs = toProbs(brandTopic, dims.numBrand, dims.numTopic);
+		double[][] itemBrandProbs = toProbs(itemBrand, dims.numItem, dims.numBrand);
+		
+		return new Distributions(topicUserProbs, decisionUserProbs, itemTopicProbs, brandTopicProbs, itemBrandProbs);
+	}
+
+	private double[][] toProbs(DoubleTable counts, int numRow, int numCol, double prior) {
 		// TODO Auto-generated method stub
-		return null;
+		double[][] probs = new double[numRow][numCol];
+		for (int i = 0; i < numCol; i++) {
+			double marginCount = counts.get(numRow, i);
+			for (int j = 0; j < numRow; j++) {
+				
+			}
+		}
+		
+		return probs;
 	}
 }

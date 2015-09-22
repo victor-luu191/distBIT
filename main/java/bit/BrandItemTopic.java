@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import defs.CountTables;
 import defs.Dimensions;
+import defs.Pair;
 import defs.TableIds;
 
 public class BrandItemTopic extends PsApplication {
@@ -48,16 +49,25 @@ public class BrandItemTopic extends PsApplication {
 	}
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-//		final BrandItemTopicConfig  config = new BrandItemTopicConfig();
-//		final CmdLineParser parser = new CmdLineParser(config);
-//		try {
-//			parser.parseArgument(args);
-//		} catch (CmdLineException e) {
-//			logger.error(e.getMessage());
-//			parser.printUsage(System.err);
-//			return;
-//		}
+		
+		final BrandItemTopicConfig  config = new BrandItemTopicConfig();
+		final CmdLineParser parser = new CmdLineParser(config);
+		try {
+			parser.parseArgument(args);
+		} catch (CmdLineException e) {
+			logger.error(e.getMessage());
+			parser.printUsage(System.err);
+			return;
+		}
+		
+		long trainTimeBegin = System.currentTimeMillis();
+		BrandItemTopic bitThreads = new BrandItemTopic(config);
+		bitThreads.run(config);
+		
+		if (config.clientId == 0) {
+			long trainTimeElapsed = System.currentTimeMillis() - trainTimeBegin;
+			logger.info("Finished training after " + trainTimeElapsed + "(ms)");
+		}
 		
 	}
 
@@ -75,10 +85,9 @@ public class BrandItemTopic extends PsApplication {
 		LossRecorder.createLossTable();
 	}
 
-
 	@Override
 	public void runWorkerThread(int threadId) {
-		// TODO Auto-generated method stub
+
 		int numClients = PsTableGroup.getNumClients();
 		int numThreads = PsTableGroup.getNumLocalWorkerThreads();
 		bitConfig.numWorkers = numClients * numThreads;
@@ -93,5 +102,18 @@ public class BrandItemTopic extends PsApplication {
 		BrandItemTopicWorker worker = new BrandItemTopicWorker(bitConfig, workerRank);
 		worker.run();
 	}
+	
+	private static Pair[] buildPairs(int numBrand) {
 
+		Pair[] allPairs = new Pair[numBrand + 1];	// all pairs = { (T, b1), ..., (T, bQ), (F,"no brand") }
+
+		for (int bIndex=0; bIndex < numBrand; bIndex++) {
+
+			allPairs[bIndex] = new Pair(1, bIndex);
+		}
+		int last = allPairs.length - 1;
+		allPairs[last] = new Pair(0, -1);	// bIndex = -1 means no actual brand
+
+		return allPairs;
+	}
 }
