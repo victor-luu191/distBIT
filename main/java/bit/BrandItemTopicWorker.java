@@ -14,31 +14,51 @@ import defs.CountTables;
 import defs.Dimensions;
 import defs.Instance;
 import defs.Latent;
+import defs.TableIds;
 
 public class BrandItemTopicWorker implements Runnable {
 
 	private static final Logger logger = LoggerFactory.getLogger(BrandItemTopicWorker.class);
 
+	// global objects
     private int numWorkers;
     private int numThreads;
-    private int workerRank;
-    
+    private int numIter;
+	private int staleness;
     private DataSet trainSet;
-    private Dimensions dims;
-    
-    private CountTables countTables;
-	private int topicUserTableId;
+    private int topicUserTableId;
 	private int decisionUserTableId;
 	private int itemTopicTableId;
 	private int brandTopicTableId;
 	private int itemBrandTableId;
-
+	private Dimensions dims;
+	private CountTables countTables;
+	
+	// local objects
+	private int workerRank;
+	private int userBegin; 
+	private int userEnd;
 	private Latent latent;
-	private final int  numDecision = 2;
-	private Random random;
-
-	int userBegin; 
-	int userEnd;
+	
+	public static class Config {
+		public int numWorkers = -1;
+        // Worker's rank among all threads across all nodes.
+        public int numThreads = -1;
+        public int numIter = 1;
+        public int staleness = 0;
+        public DataSet trainSet = null;
+		
+		public int topicUserId = 0;
+		public int decisionUserId = 1;
+		public int itemTopicId = 2;
+		public int brandTopicId = 3;
+		public int itemBrandId = 4;
+//		private TableIds tableIds = new TableIds(topicUserId, decisionUserId, itemTopicId, 
+//													brandTopicId, itemBrandId);
+		
+		public Dimensions dims = new Dimensions();
+       
+	}
 	
 	public void run() {
 		// TODO 
@@ -49,6 +69,7 @@ public class BrandItemTopicWorker implements Runnable {
 		countTables.itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
 		
 		latent = new Latent();
+		Dimensions dims = countTables.dims;
 		
 		int numUserPerWorker = dims.numUser/numWorkers;
 		int userBegin = workerRank * numUserPerWorker;
@@ -59,17 +80,19 @@ public class BrandItemTopicWorker implements Runnable {
 		initTables(countTables, latent, userBegin, userEnd);
 		PsTableGroup.globalBarrier();
 		
-		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-			Instance instance = trainSet.instances.get(uIndex);
-			ArrayList<String> adoptions = instance.getItemIds();
-			
-			for (int adoptIndex = 0; adoptIndex < adoptions.size(); adoptIndex++) {
+		for (int iter=0; iter < numIter; iter++) {
+			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+				Instance instance = trainSet.instances.get(uIndex);
+				ArrayList<String> adoptions = instance.getItemIds();
 				
-				int itemIndex = trainSet.itemDict.lookupIndex(adoptions.get(adoptIndex));
-				Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
-				BrandItemTopicCore.updateTopic(adopt, countTables, latent, dims);
-				BrandItemTopicCore.updatePair(adopt, countTables, latent, dims);
-				// TODO
+				for (int adoptIndex = 0; adoptIndex < adoptions.size(); adoptIndex++) {
+					
+					int itemIndex = trainSet.itemDict.lookupIndex(adoptions.get(adoptIndex));
+					Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
+					BrandItemTopicCore.updateTopic(adopt, countTables, latent, dims);
+					BrandItemTopicCore.updatePair(adopt, countTables, latent, dims);
+				}
+				PsTableGroup.clock();
 			}
 		}
 		
@@ -98,6 +121,8 @@ public class BrandItemTopicWorker implements Runnable {
 	 */
 	private void initValues(CountTables countTables, Latent latent, int uIndex) {
 		
+		Random random = new Random(123);
+		Dimensions dims = countTables.dims;
 		Instance instance = trainSet.instances.get(uIndex);
 		ArrayList<String> adoptions = instance.getItemIds();
 		// create lists of latents for adoptions
@@ -108,7 +133,7 @@ public class BrandItemTopicWorker implements Runnable {
 		// Add margin counts to tables topicUser and decisionUser 
 		// both equal to number of adopts of the user
 		countTables.topicUser.inc(dims.numTopic, uIndex, adoptions.size());
-		countTables.decisionUser.inc(numDecision, uIndex, adoptions.size());
+		countTables.decisionUser.inc(Dimensions.numDecision, uIndex, adoptions.size());
 		
 		for (int i=0; i < adoptions.size(); i++) {
 			int itemIndex = trainSet.itemDict.lookupIndex(adoptions.get(i));
@@ -117,7 +142,7 @@ public class BrandItemTopicWorker implements Runnable {
 			countTables.itemTopic.inc(itemIndex, topicIndex, 1);
 			countTables.itemTopic.inc(dims.numItem, topicIndex, 1);	// inc marginal count
 			
-			int decision = random.nextInt(numDecision);
+			int decision = random.nextInt(Dimensions.numDecision);
 			latent.decisions.get(uIndex).add(decision);	// init decision for adoption (u,i)
 			
 			if (decision == 0) {// for this adoption, no brand is used

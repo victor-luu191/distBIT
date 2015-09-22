@@ -7,6 +7,13 @@ public class Dimensions {
 	public int numItem;
 	public int numTopic;
 	
+	public Dimensions() {
+		numUser = 0;
+		numBrand = 0;
+		numItem = 0;
+		numTopic = 0;
+	}
+
 	public Dimensions(int numUser, int numBrand, int numItem, int numTopic) {
 		this.numUser = numUser;
 		this.numBrand = numBrand;

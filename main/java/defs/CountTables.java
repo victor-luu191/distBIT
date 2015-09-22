@@ -5,7 +5,7 @@ import org.petuum.jbosen.table.DoubleTable;
 
 public class CountTables {
 	
-	Dimensions dims;
+	public Dimensions dims;
 	
 	public DoubleTable topicUser; 
 	public DoubleTable decisionUser;
