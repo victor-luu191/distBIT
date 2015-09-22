@@ -74,8 +74,8 @@ public class BrandItemTopicWorker implements Runnable {
 		latent = new Latent();
 		int numUser = countTables.dims.numUser;
 		int numUserPerWorker = numUser/numWorkers;
-		int userBegin = workerRank * numUserPerWorker;
-		int userEnd = (workerRank == numWorkers - 1)? numUser : (userBegin + numUserPerWorker);
+		userBegin = workerRank * numUserPerWorker;
+		userEnd = (workerRank == numWorkers - 1)? numUser : (userBegin + numUserPerWorker);
 		
 		// Since each thread initialize part of count tables, use barrier to
         // ensure initialization completes.
