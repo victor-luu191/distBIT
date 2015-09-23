@@ -24,7 +24,4 @@ public class Brand {
 		return "Brand [id=" + id + ", item_ids=" + item_ids + "]";
 	}
 	
-	public boolean inProducers(Item item) {
-		return item_ids.contains(item.id);
-	}
 }

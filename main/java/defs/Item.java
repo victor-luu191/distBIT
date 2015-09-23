@@ -4,22 +4,26 @@ import java.util.*;
 
 public class Item {
 	String id;	
-	private Set<String> brandIds;	// brands (co-)producing the item
+	private Set<String> producers;	// brands (co-)producing the item
 	
 	public Item(String id, Set<String> brandIds) {
 		super();
 		this.id = id;
-		this.brandIds = brandIds;
+		this.producers = brandIds;
 	}
 	
 	public Set<String> getBrands() {
-		return brandIds;
+		return producers;
 	}
 
 	public void setBrands(Set<String> brandIds) {
-		this.brandIds = brandIds;
+		this.producers = brandIds;
 	}
 
+	public boolean belongTo(String brandId) {
+		return producers.contains(brandId);
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -47,7 +51,7 @@ public class Item {
 
 	@Override
 	public String toString() {
-		return "Item id " + id + " belongs to brands: " + brandIds.toString();
+		return "Item id " + id + " belongs to brands: " + producers.toString();
 	}
 	
 }

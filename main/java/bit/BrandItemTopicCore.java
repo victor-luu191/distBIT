@@ -140,7 +140,8 @@ public class BrandItemTopicCore {
 		Item item = (Item) ds.itemDict.lookupObject(itemIndex);
 		Brand brand = (Brand) ds.brandDict.lookupObject(bIndex);
 		
-		return brand.inProducers(item);
+		String brandId = brand.id;
+		return item.belongTo(brandId);
 	}
 
 	private static double estTopicBased(int userIndex, int itemIndex, int cTopic, 
