@@ -13,7 +13,7 @@ import defs.Item;
 
 class DataReader {
 
-	static Dimensions loadData(String dataDir, DataSet ds) {
+	static Dimensions loadData(String dataDir, DataSet ds) throws IOException {
 		
 		// TODO Auto-generated method stub
 		int numUser=0;
@@ -24,10 +24,15 @@ class DataReader {
 		
 		buildItemAndBrandDicts(ds, fMemberRel);
 		
-		loadAdopts(fAdopt);
+		loadAdopts(fAdopt, ds);
 		Dimensions dims = new Dimensions(numUser, numBrand, numItem);
 		System.out.println("Finished loading data set");
 		return dims;
+	}
+
+	private static void loadAdopts(String fAdopt, DataSet ds) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	private static void buildItemAndBrandDicts(DataSet ds, String fMemberRel) throws IOException {
