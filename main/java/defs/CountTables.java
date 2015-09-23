@@ -25,17 +25,7 @@ public class CountTables {
 		this.itemBrand = itemBrand;
 	}
 
-//	public CountTables(TableIds tableIds, Dimensions dims, int staleness) {
-//		
-//		this.dims = dims;
-//		// Config count tables
-//		PsTableGroup.createDenseDoubleTable(tableIds.topicUserId, staleness, dims.numTopic);
-//		PsTableGroup.createDenseDoubleTable(tableIds.decisionUserId, staleness, Dimensions.numDecision);
-//		PsTableGroup.createDenseDoubleTable(tableIds.itemTopicId, staleness, dims.numItem);
-//		PsTableGroup.createDenseDoubleTable(tableIds.brandTopicId, staleness, dims.numBrand);
-//		PsTableGroup.createDenseDoubleTable(tableIds.itemBrandId, staleness, dims.numItem);
-//		
-//	}
+
 
 	public void decTopicCount(int cTopic, int userIndex, int itemIndex, int cBrandIndex, int cDecision) {
 		

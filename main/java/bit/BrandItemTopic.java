@@ -92,15 +92,13 @@ public class BrandItemTopic extends PsApplication {
 		
 		// Configure count tables (containers of counts) with proper dimensions
 		int staleness = 0;
-		PsTableGroup.createDenseDoubleTable(topicUserTableId, staleness, dims.numTopic);
-		PsTableGroup.createDenseDoubleTable(decisionUserTableId, staleness, Dimensions.numDecision);
-		PsTableGroup.createDenseDoubleTable(itemTopicTableId, staleness, dims.numItem);
-		PsTableGroup.createDenseDoubleTable(brandTopicTableId, staleness, dims.numBrand);
-		PsTableGroup.createDenseDoubleTable(itemBrandTableId, staleness, dims.numItem);
+		PsTableGroup.createDenseDoubleTable(topicUserTableId, staleness, dims.numUser);
+		PsTableGroup.createDenseDoubleTable(decisionUserTableId, staleness, dims.numUser);
+		PsTableGroup.createDenseDoubleTable(itemTopicTableId, staleness, dims.numTopic);
+		PsTableGroup.createDenseDoubleTable(brandTopicTableId, staleness, dims.numTopic);
+		PsTableGroup.createDenseDoubleTable(itemBrandTableId, staleness, dims.numBrand);
 		
-//		TableIds tableIds = new TableIds(topicUserTableId, decisionUserTableId, itemTopicTableId, 
-//				brandTopicTableId, itemBrandTableId);
-//		new CountTables(tableIds, dims, staleness);
+
 		config.allPairs = buildPairs(dims.numBrand);
 		
 		// Configure loss table

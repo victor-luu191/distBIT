@@ -302,6 +302,7 @@ public class BrandItemTopicWorker implements Runnable {
 		userBegin = workerRank * numUserPerWorker;
 		userEnd = (workerRank == numWorkers - 1)? numUser : (userBegin + numUserPerWorker);
 		
+		// Init the partition of tables for [userBegin, userEnd), excluding last user
 		// Since each thread initialize part of count tables, use barrier to
         // ensure initialization completes.
 		initTables(countTables, latent, userBegin, userEnd);
