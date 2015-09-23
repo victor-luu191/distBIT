@@ -7,11 +7,14 @@ public class Item {
 	private List<String> producers;	// brands (co-)producing the item
 	
 	public Item(String id, List<String> producers) {
-		super();
 		this.id = id;
 		this.producers = producers;
 	}
 	
+	public Item(String id) {
+		this.id = id;
+	}
+
 	public List<String> getProducers() {
 		return producers;
 	}

@@ -15,11 +15,14 @@ import org.petuum.jbosen.table.DoubleTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.org.apache.bcel.internal.generic.NEW;
+
 import defs.Adoption;
 import defs.CountTables;
 import defs.Dimensions;
 import defs.Distributions;
 import defs.AdoptHistory;
+import defs.Item;
 import defs.Latent;
 import defs.Pair;
 import defs.Priors;
@@ -116,7 +119,7 @@ public class BrandItemTopicWorker implements Runnable {
 	private void updateLatents(ArrayList<String> adoptions, int uIndex) {
 		for (int adoptIndex = 0; adoptIndex < adoptions.size(); adoptIndex++) {
 			
-			int itemIndex = ds.itemDict.lookupIndex(adoptions.get(adoptIndex));
+			int itemIndex = ds.itemDict.lookupIndex(new Item(adoptions.get(adoptIndex)));
 			Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
 			BrandItemTopicCore.updateTopic(adopt, countTables, latent, priors);
 			BrandItemTopicCore.updatePair(adopt, countTables, latent, priors, allPairs);
@@ -162,7 +165,7 @@ public class BrandItemTopicWorker implements Runnable {
 		countTables.decisionUser.inc(Dimensions.numDecision, uIndex, adoptions.size());
 		
 		for (int i=0; i < adoptions.size(); i++) {
-			int itemIndex = ds.itemDict.lookupIndex(adoptions.get(i));
+			int itemIndex = ds.itemDict.lookupIndex(new Item(adoptions.get(i)));
 			int topicIndex = random.nextInt(dims.numTopic);
 			latent.topics.get(uIndex).add(topicIndex);	// init topic for adoption (u,i)
 			countTables.itemTopic.inc(itemIndex, topicIndex, 1);
@@ -299,6 +302,11 @@ public class BrandItemTopicWorker implements Runnable {
 		latent = new Latent();
 		int numUser = countTables.dims.numUser;
 		int numUserPerWorker = numUser/numWorkers;
+		if (workerRank == 0) {
+			logger.info("Number of users per worker " + numUserPerWorker + ", burnIn " + burnIn + ", numIter " + 
+					numIter);
+		}
+		
 		userBegin = workerRank * numUserPerWorker;
 		userEnd = (workerRank == numWorkers - 1)? numUser : (userBegin + numUserPerWorker);
 		
@@ -309,6 +317,7 @@ public class BrandItemTopicWorker implements Runnable {
 		PsTableGroup.globalBarrier();
 		
 		// Burn-in period
+		long burnInBegin = System.currentTimeMillis();
 		for (int iter=0; iter < burnIn; iter++) {
 			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
 				AdoptHistory instance = ds.histories.get(uIndex);
@@ -318,8 +327,14 @@ public class BrandItemTopicWorker implements Runnable {
 			}
 		}
 		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
+		long burnInElapsed = System.currentTimeMillis() - burnInBegin;
+		if (workerRank == 0) {
+			logger.info("burnIn elapsed " + burnInElapsed);
+		}
+		
 		
 		// Actual training period
+		long trainBegin = System.currentTimeMillis();
 		for (int iter=0; iter < numIter; iter++) {
 			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
 				AdoptHistory instance = ds.histories.get(uIndex);
@@ -328,6 +343,7 @@ public class BrandItemTopicWorker implements Runnable {
 				PsTableGroup.clock();
 			}
 		}
+		
 		// TODO: Add loss evaluation here
 		PsTableGroup.globalBarrier();	// sync all resulting count tables
 		
