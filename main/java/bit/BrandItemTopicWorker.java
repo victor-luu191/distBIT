@@ -19,7 +19,7 @@ import defs.Adoption;
 import defs.CountTables;
 import defs.Dimensions;
 import defs.Distributions;
-import defs.Instance;
+import defs.AdoptHistory;
 import defs.Latent;
 import defs.Pair;
 import defs.Priors;
@@ -35,7 +35,7 @@ public class BrandItemTopicWorker implements Runnable {
     private int numIter;
     private int numTopic;
 	private int staleness;
-    private DataSet trainSet;
+    private DataSet ds;
     private int topicUserTableId;
 	private int decisionUserTableId;
 	private int itemTopicTableId;
@@ -62,7 +62,7 @@ public class BrandItemTopicWorker implements Runnable {
         public int burnIn = 1;
         public int numIter = 1;
         public int staleness = 0;
-        public DataSet trainSet = null;
+        public DataSet ds = null;	// later change to trainSet
 		
 		public int topicUserId = 0;
 		public int decisionUserId = 1;
@@ -92,8 +92,8 @@ public class BrandItemTopicWorker implements Runnable {
         
         this.staleness = config.staleness;
         
-        assert config.trainSet != null;
-        this.trainSet = config.trainSet;
+        assert config.ds != null;
+        this.ds = config.ds;
         
         this.topicUserTableId = config.topicUserId;
         this.decisionUserTableId = config.decisionUserId;
@@ -113,7 +113,7 @@ public class BrandItemTopicWorker implements Runnable {
 	private void updateLatents(ArrayList<String> adoptions, int uIndex) {
 		for (int adoptIndex = 0; adoptIndex < adoptions.size(); adoptIndex++) {
 			
-			int itemIndex = trainSet.itemDict.lookupIndex(adoptions.get(adoptIndex));
+			int itemIndex = ds.itemDict.lookupIndex(adoptions.get(adoptIndex));
 			Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
 			BrandItemTopicCore.updateTopic(adopt, countTables, latent, priors);
 			BrandItemTopicCore.updatePair(adopt, countTables, latent, priors, allPairs);
@@ -146,8 +146,8 @@ public class BrandItemTopicWorker implements Runnable {
 		
 		Random random = new Random(123);
 		Dimensions dims = countTables.dims;
-		Instance instance = trainSet.instances.get(uIndex);
-		ArrayList<String> adoptions = instance.getItemIds();
+		AdoptHistory adoptHistory = ds.histories.get(uIndex);
+		ArrayList<String> adoptions = adoptHistory.getItemIds();
 		// create lists of latents for adoptions
 		latent.topics.put(uIndex, new ArrayList<Integer>());
 		latent.brands.put(uIndex, new ArrayList<Integer>());
@@ -159,7 +159,7 @@ public class BrandItemTopicWorker implements Runnable {
 		countTables.decisionUser.inc(Dimensions.numDecision, uIndex, adoptions.size());
 		
 		for (int i=0; i < adoptions.size(); i++) {
-			int itemIndex = trainSet.itemDict.lookupIndex(adoptions.get(i));
+			int itemIndex = ds.itemDict.lookupIndex(adoptions.get(i));
 			int topicIndex = random.nextInt(dims.numTopic);
 			latent.topics.get(uIndex).add(topicIndex);	// init topic for adoption (u,i)
 			countTables.itemTopic.inc(itemIndex, topicIndex, 1);
@@ -304,7 +304,7 @@ public class BrandItemTopicWorker implements Runnable {
 		// Burn-in period
 		for (int iter=0; iter < burnIn; iter++) {
 			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-				Instance instance = trainSet.instances.get(uIndex);
+				AdoptHistory instance = ds.histories.get(uIndex);
 				ArrayList<String> adoptions = instance.getItemIds();
 				updateLatents(adoptions, uIndex);
 				PsTableGroup.clock();
@@ -315,7 +315,7 @@ public class BrandItemTopicWorker implements Runnable {
 		// Actual training period
 		for (int iter=0; iter < numIter; iter++) {
 			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-				Instance instance = trainSet.instances.get(uIndex);
+				AdoptHistory instance = ds.histories.get(uIndex);
 				ArrayList<String> adoptions = instance.getItemIds();
 				updateLatents(adoptions, uIndex);
 				PsTableGroup.clock();

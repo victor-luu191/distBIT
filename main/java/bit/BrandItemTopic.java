@@ -73,12 +73,25 @@ public class BrandItemTopic extends PsApplication {
 
 	@Override
 	public void initialize() {
+		
+		long loadTimebegin = System.currentTimeMillis();
+		config.dataDir = "data";
+		DataSet ds = new DataSet();
+		Dimensions dims = DataReader.loadData(config.dataDir, ds);
+		dims.numTopic = config.numTopic;
+		bitConfig.ds = ds;	// share data set among workers
+		long loadTimeElapsed = System.currentTimeMillis() - loadTimebegin;
+		int numAdopts = ds.numAdopts();
+		logger.info("Client " + config.clientId + " load dataset of " + numAdopts + " adoptions. "
+				+ "The dataset has " + dims.numUser + " users, " + dims.numItem + " items and " + 
+				dims.numBrand + " brands. Loading finished after " + loadTimeElapsed + "ms.");
+		
 		// Configure count tables (containers of counts) with proper dimensions
 		int staleness = 0;
 		TableIds tableIds = new TableIds(topicUserTableId, decisionUserTableId, itemTopicTableId, 
 								brandTopicTableId, itemBrandTableId);
 		
-		Dimensions dims = new Dimensions(numUser, numBrand, numItem, config.numTopic);
+		
 		new CountTables(tableIds, dims, staleness);
 		
 		// Configure loss table

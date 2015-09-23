@@ -21,6 +21,12 @@ public class Dimensions {
 		this.numTopic = numTopic;
 	}
 
+	public Dimensions(int numUser, int numBrand, int numItem) {
+		this.numUser = numUser;
+		this.numBrand = numBrand;
+		this.numItem = numItem;
+	}
+
 	@Override
 	public String toString() {
 		return "Dimensions [numUser=" + numUser + ", numBrand=" + numBrand

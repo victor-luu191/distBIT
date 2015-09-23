@@ -11,8 +11,8 @@ public class BrandItemTopicConfig extends PsConfig {
 	@Option(name = "-staleness", required = false, usage = "Staleness of parameter tables. Default = 0")
 	public int staleness = 0;
 
-	@Option(name = "-dataFile", required = true, usage = "Path to data file.")
-	public String dataFile = "";
+	@Option(name = "-dataFolder", required = true, usage = "Path to data folder. Default is current folder.")
+	public String dataDir = "";
 
 //	@Option(name = "-numEpochs", required = false, usage = "Number of passes over data. Default = 10")
 //	public int numEpochs = 10;

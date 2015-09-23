@@ -3,15 +3,25 @@ package bit;
 import java.util.ArrayList;
 
 import cc.mallet.types.Alphabet;
-import defs.Instance;
+import defs.AdoptHistory;
+import defs.Item;
 
 public class DataSet {
-	public ArrayList<Instance> instances ;
+	public ArrayList<AdoptHistory> histories ;
+	// Create maps from Id to index as dictionaries
+	public Alphabet userDict;
 	public Alphabet itemDict;
 	public Alphabet brandDict;
 	
 	public DataSet() {
-		instances = new ArrayList<Instance>();
+		histories = new ArrayList<AdoptHistory>();
+		userDict = new Alphabet(String.class);
+		itemDict = new Alphabet(String.class);
+		brandDict = new Alphabet(String.class);
 	}
-	// TODO
+
+	public int numAdopts() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }
