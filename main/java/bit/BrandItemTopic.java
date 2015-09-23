@@ -19,10 +19,6 @@ public class BrandItemTopic extends PsApplication {
 	BrandItemTopicConfig config ;
 	BrandItemTopicWorker.Config bitConfig;
 
-	private int numUser;
-	private int numBrand;
-	private int numItem;
-
 	private static final int topicUserTableId = 0;
 	private static final int decisionUserTableId = 1;
 	private static final int itemTopicTableId = 2;
