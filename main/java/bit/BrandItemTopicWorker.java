@@ -74,7 +74,7 @@ public class BrandItemTopicWorker implements Runnable {
 //													brandTopicId, itemBrandId);
 		
 		public Priors priors = new Priors();
-		public int numTopic = 10;
+		public int numTopic = 0;
 		public String outputPrefix = "";
 		public Pair[] allPairs = new Pair[0];
 		public Dimensions dims = new Dimensions();
@@ -91,6 +91,7 @@ public class BrandItemTopicWorker implements Runnable {
         this.burnIn = config.burnIn;
         this.numIter = config.numIter;
         this.numTopic = config.numTopic;
+        this.dims = config.dims;
         
         this.staleness = config.staleness;
         
