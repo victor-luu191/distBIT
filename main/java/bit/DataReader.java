@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 import cc.mallet.types.Alphabet;
 import defs.Brand;
@@ -21,7 +22,7 @@ class DataReader {
 		String fAdopt = dataDir + "adopt.csv"  ;
 		String fMemberRel = dataDir + "member_rel.csv"  ;
 		
-		buildDicts(ds, fMemberRel);
+		buildItemAndBrandDicts(ds, fMemberRel);
 		
 		loadAdopts(fAdopt);
 		Dimensions dims = new Dimensions(numUser, numBrand, numItem);
@@ -29,12 +30,9 @@ class DataReader {
 		return dims;
 	}
 
-	private static void buildDicts(DataSet ds, String fMemberRel) {
-		ArrayList<Item> items = new ArrayList<Item>();
-		ArrayList<Brand> brands = new ArrayList<Brand>();
-		HashSet<String> loaded_brands = new HashSet<String>();	// monitor which brands are loaded 
-		
-
+	private static void buildItemAndBrandDicts(DataSet ds, String fMemberRel) throws IOException {
+		ArrayList<Item> allItems = new ArrayList<Item>();
+		Set<Brand> allBrands = new HashSet<Brand>();
 		BufferedReader br = new BufferedReader(new FileReader(fMemberRel));
 		String line = br.readLine();	// skip header line
 
@@ -42,33 +40,25 @@ class DataReader {
 			String[] substr = line.split(",");
 			String item_id = substr[0];
 			String[] brand_ids = substr[1].split("; ");
-			String topicId = substr[2];
+//			String topicId = substr[2];	// only applicable to synthetic data
 
-			items.add(new Item(item_id, Arrays.asList(brand_ids)));
-			// deal with brands extracted from current line
-			for (String bid : brand_ids) {
-
-				if (!bid.equalsIgnoreCase("NA")) {
-					// if this is a new brand then create a new brand obj  for it
-					if (!loaded_brands.contains(bid)) {
-						brands.add(new Brand(bid));
-						loaded_brands.add(bid);
-					}
-					// Add item_id to the list of items produced by the brand
-					int bIndex = Brand.toIndex(bid);
-					if (bIndex >= 0) {
-						brands.get(bIndex).getItemIds().add(item_id);
-					}
-				} 
-			}
-			
-			
+			allItems.add(new Item(item_id, Arrays.asList(brand_ids)));
+			add(brand_ids, allBrands);
 		}
 		br.close();
 //		finish loading data from fMemberRel
-		ds.itemDict = new Alphabet(items.toArray());
-		ds.brandDict = new Alphabet(brands.toArray());
+		ds.itemDict = new Alphabet(allItems.toArray());
+		ds.brandDict = new Alphabet(allBrands.toArray());
 		
+	}
+
+	private static void add(String[] brand_ids, Set<Brand> brands) {
+		for (String bid : brand_ids) {
+
+			if (!bid.equalsIgnoreCase("NA")) {
+				brands.add(new Brand(bid));
+			} 
+		}
 	}
 
 }
