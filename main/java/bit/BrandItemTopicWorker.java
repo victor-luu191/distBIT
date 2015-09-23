@@ -51,6 +51,7 @@ public class BrandItemTopicWorker implements Runnable {
 	private int userEnd;
 	private Latent latent;
 	private Pair[] allPairs;
+	private Dimensions dims;
 
 	private LossRecorder lossRecorder = new LossRecorder();
 
@@ -76,6 +77,7 @@ public class BrandItemTopicWorker implements Runnable {
 		public int numTopic = 10;
 		public String outputPrefix = "";
 		public Pair[] allPairs = new Pair[0];
+		public Dimensions dims = new Dimensions();
 	}
 	
 	public BrandItemTopicWorker(Config config, int workerRank) {
@@ -285,11 +287,13 @@ public class BrandItemTopicWorker implements Runnable {
 	
 	public void run() {
 		 
-		countTables.topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
-		countTables.decisionUser = PsTableGroup.getDoubleTable(decisionUserTableId);
-		countTables.itemTopic = PsTableGroup.getDoubleTable(itemTopicTableId);
-		countTables.brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
-		countTables.itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
+		DoubleTable topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
+		DoubleTable decisionUser = PsTableGroup.getDoubleTable(decisionUserTableId);
+		DoubleTable itemTopic = PsTableGroup.getDoubleTable(itemTopicTableId);
+		DoubleTable brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
+		DoubleTable itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
+		
+		countTables = new CountTables(dims, topicUser, decisionUser, itemTopic, brandTopic, itemBrand);
 		
 		latent = new Latent();
 		int numUser = countTables.dims.numUser;
@@ -364,7 +368,6 @@ public class BrandItemTopicWorker implements Runnable {
 	}
 
 	private double[][] toProbs(DoubleTable counts, int numRow, int numCol, double prior) {
-		// TODO Auto-generated method stub
 		double[][] probs = new double[numRow][numCol];
 		for (int i = 0; i < numCol; i++) {
 			double marginCount = counts.get(numRow, i);

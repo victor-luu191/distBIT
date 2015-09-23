@@ -37,6 +37,7 @@ class DataReader {
 	 */
 	private static void loadAdopts(String fAdopt, DataSet ds)  {
 		try {
+			Set<String> addedUsers = new HashSet<String>();
 			BufferedReader br = new BufferedReader(new FileReader(fAdopt));
 			String line = br.readLine();	// skip header line
 			while ((line = br.readLine()) != null) {
@@ -45,14 +46,13 @@ class DataReader {
 				
 				int last = record.length - 1;
 				String item_id = record[last].trim() ;
-				boolean addIfNotPresent = true;
-//				lookup user in the dictionary and 
-//				if he is not present yet, add him  and initialize his history with the first item
-				int userIndex = ds.userDict.lookupIndex(uid, addIfNotPresent);	
-				if (userIndex == -1) {// new user
+//				if he is new, add him  and initialize his history with the first item
+				if (!addedUsers.contains(uid)) {
 					ds.histories.add(new AdoptHistory(uid, item_id));
+					addedUsers.add(uid);
 				}
-				else {// if he is already present, append the item to the list of items adopted by the user
+				else {// if he appeared already, append the item to the list of items adopted by the user
+					int userIndex = ds.userDict.lookupIndex(uid);
 					ArrayList<String> adoptedItems = ds.histories.get(userIndex).getItemIds();
 					adoptedItems.add(item_id);
 				}

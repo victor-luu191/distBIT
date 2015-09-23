@@ -34,6 +34,7 @@ public class BrandItemTopic extends PsApplication {
 		bitConfig.numIter = config.numIter;
 		bitConfig.priors = config.priors;
 		bitConfig.numTopic = config.numTopic;
+//		bitConfig.dims = config.dims;
 		bitConfig.allPairs = config.allPairs;
 		bitConfig.staleness = config.staleness;
 		
@@ -75,10 +76,13 @@ public class BrandItemTopic extends PsApplication {
 	public void initialize() {
 		
 		long loadTimebegin = System.currentTimeMillis();
-		config.dataDir = "data";
+		config.dataDir = "data/syn/16/";
 		DataSet ds = new DataSet();
-		Dimensions dims = DataReader.loadData(config.dataDir, ds);
+		// load data and record dimensions: numUser, numItem, numBrand
+		Dimensions dims = DataReader.loadData(config.dataDir, ds);	 
 		dims.numTopic = config.numTopic;
+		bitConfig.dims = dims;	// collect all dimensions to pass to workers
+		
 		bitConfig.ds = ds;	// share data set among workers
 		long loadTimeElapsed = System.currentTimeMillis() - loadTimebegin;
 		int numAdopts = ds.numAdopts();
@@ -88,11 +92,15 @@ public class BrandItemTopic extends PsApplication {
 		
 		// Configure count tables (containers of counts) with proper dimensions
 		int staleness = 0;
-		TableIds tableIds = new TableIds(topicUserTableId, decisionUserTableId, itemTopicTableId, 
-								brandTopicTableId, itemBrandTableId);
+		PsTableGroup.createDenseDoubleTable(topicUserTableId, staleness, dims.numTopic);
+		PsTableGroup.createDenseDoubleTable(decisionUserTableId, staleness, Dimensions.numDecision);
+		PsTableGroup.createDenseDoubleTable(itemTopicTableId, staleness, dims.numItem);
+		PsTableGroup.createDenseDoubleTable(brandTopicTableId, staleness, dims.numBrand);
+		PsTableGroup.createDenseDoubleTable(itemBrandTableId, staleness, dims.numItem);
 		
-		
-		new CountTables(tableIds, dims, staleness);
+//		TableIds tableIds = new TableIds(topicUserTableId, decisionUserTableId, itemTopicTableId, 
+//				brandTopicTableId, itemBrandTableId);
+//		new CountTables(tableIds, dims, staleness);
 		config.allPairs = buildPairs(dims.numBrand);
 		
 		// Configure loss table

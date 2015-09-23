@@ -3,6 +3,7 @@ package bit;
 import org.kohsuke.args4j.Option;
 import org.petuum.jbosen.PsConfig;
 
+import defs.Dimensions;
 import defs.Pair;
 import defs.Priors;
 
@@ -11,7 +12,7 @@ public class BrandItemTopicConfig extends PsConfig {
 	@Option(name = "-staleness", required = false, usage = "Staleness of parameter tables. Default = 0")
 	public int staleness = 0;
 
-	@Option(name = "-dataFolder", required = true, usage = "Path to data folder. Default is current folder.")
+	@Option(name = "-dataDir", required = true, usage = "Path to data folder. Default is current folder.")
 	public String dataDir = "";
 
 //	@Option(name = "-numEpochs", required = false, usage = "Number of passes over data. Default = 10")
@@ -46,7 +47,9 @@ public class BrandItemTopicConfig extends PsConfig {
 	
 	public Priors priors = new Priors(alpha, beta, gamma, theta, phi);
 	
-	Pair[] allPairs;
+	public Pair[] allPairs;
+
+	public Dimensions dims;
 	
 //	@Option(name = "-snapshot", required = false, usage = "Length of each snapshot. Default = 50")
 //	public int snapshot = 50;

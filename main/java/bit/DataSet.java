@@ -19,7 +19,10 @@ public class DataSet {
 	}
 
 	public int numAdopts() {
-		// TODO Auto-generated method stub
-		return 0;
+		int sum = 0;
+		for (AdoptHistory hist : histories) {
+			sum += hist.getItemIds().size();
+		}
+		return sum;
 	}
 }

@@ -12,18 +12,30 @@ public class CountTables {
 	public DoubleTable itemTopic; 
 	public DoubleTable brandTopic; 
 	public DoubleTable itemBrand;
-	
-	public CountTables(TableIds tableIds, Dimensions dims, int staleness) {
+
+	public CountTables(Dimensions dims, DoubleTable topicUser,
+			DoubleTable decisionUser, DoubleTable itemTopic,
+			DoubleTable brandTopic, DoubleTable itemBrand) {
 		
 		this.dims = dims;
-		// Config count tables
-		PsTableGroup.createDenseDoubleTable(tableIds.topicUserId, staleness, dims.numTopic);
-		PsTableGroup.createDenseDoubleTable(tableIds.decisionUserId, staleness, Dimensions.numDecision);
-		PsTableGroup.createDenseDoubleTable(tableIds.itemTopicId, staleness, dims.numItem);
-		PsTableGroup.createDenseDoubleTable(tableIds.brandTopicId, staleness, dims.numBrand);
-		PsTableGroup.createDenseDoubleTable(tableIds.itemBrandId, staleness, dims.numItem);
-		
+		this.topicUser = topicUser;
+		this.decisionUser = decisionUser;
+		this.itemTopic = itemTopic;
+		this.brandTopic = brandTopic;
+		this.itemBrand = itemBrand;
 	}
+
+//	public CountTables(TableIds tableIds, Dimensions dims, int staleness) {
+//		
+//		this.dims = dims;
+//		// Config count tables
+//		PsTableGroup.createDenseDoubleTable(tableIds.topicUserId, staleness, dims.numTopic);
+//		PsTableGroup.createDenseDoubleTable(tableIds.decisionUserId, staleness, Dimensions.numDecision);
+//		PsTableGroup.createDenseDoubleTable(tableIds.itemTopicId, staleness, dims.numItem);
+//		PsTableGroup.createDenseDoubleTable(tableIds.brandTopicId, staleness, dims.numBrand);
+//		PsTableGroup.createDenseDoubleTable(tableIds.itemBrandId, staleness, dims.numItem);
+//		
+//	}
 
 	public void decTopicCount(int cTopic, int userIndex, int itemIndex, int cBrandIndex, int cDecision) {
 		
