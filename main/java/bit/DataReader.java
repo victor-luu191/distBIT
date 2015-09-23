@@ -2,6 +2,7 @@ package bit;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 
 import cc.mallet.types.Alphabet;
@@ -43,7 +44,7 @@ class DataReader {
 			String[] brand_ids = substr[1].split("; ");
 			String topicId = substr[2];
 
-			items.add(new Item(item_id, brand_ids));
+			items.add(new Item(item_id, Arrays.asList(brand_ids)));
 			// deal with brands extracted from current line
 			for (String bid : brand_ids) {
 

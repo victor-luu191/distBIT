@@ -4,20 +4,16 @@ import java.util.*;
 
 public class Item {
 	String id;	
-	private Set<String> producers;	// brands (co-)producing the item
+	private List<String> producers;	// brands (co-)producing the item
 	
-	public Item(String id, Set<String> brandIds) {
+	public Item(String id, List<String> producers) {
 		super();
 		this.id = id;
-		this.producers = brandIds;
+		this.producers = producers;
 	}
 	
-	public Set<String> getBrands() {
+	public List<String> getProducers() {
 		return producers;
-	}
-
-	public void setBrands(Set<String> brandIds) {
-		this.producers = brandIds;
 	}
 
 	public boolean belongTo(String brandId) {
