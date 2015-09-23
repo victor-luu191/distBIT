@@ -16,6 +16,12 @@ public class AdoptHistory {
 		this.setItemIds(item_ids);
 	}
 
+	public AdoptHistory(String uId, String firstItemId) {
+		this.uId = uId;
+		setItemIds(new ArrayList<String>());
+		item_ids.add(firstItemId);
+	}
+
 	public ArrayList<String> getItemIds() {
 		return item_ids;
 	}

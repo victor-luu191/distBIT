@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import cc.mallet.types.Alphabet;
+import defs.AdoptHistory;
 import defs.Brand;
 import defs.Dimensions;
 import defs.Item;
@@ -30,9 +31,35 @@ class DataReader {
 		return dims;
 	}
 
-	private static void loadAdopts(String fAdopt, DataSet ds) {
+	/**
+	 * build adopt histories and userDict for {@code ds} 
+	 * @param fAdopt
+	 * @param ds
+	 * @throws IOException 
+	 */
+	private static void loadAdopts(String fAdopt, DataSet ds) throws IOException {
 		// TODO Auto-generated method stub
-		
+		BufferedReader br = new BufferedReader(new FileReader(fAdopt));
+		String line = br.readLine();	// skip header line
+		while ((line = br.readLine()) != null) {
+			String[] record = line.split(",");
+			String uid = record[0]; 
+			
+			int last = record.length - 1;
+			String item_id = record[last].trim() ;
+			boolean addIfNotPresent = true;
+//			lookup user in the dictionary and 
+//			if he is not present yet, add him  and initialize his history with the first item
+			int userIndex = ds.userDict.lookupIndex(uid, addIfNotPresent);	
+			if (userIndex == -1) {// new user
+				ds.histories.add(new AdoptHistory(uid, item_id));
+			}
+			else {// if he is already present, append the item to the list of items adopted by the user
+				ArrayList<String> adoptedItems = ds.histories.get(userIndex).getItemIds();
+				adoptedItems.add(item_id);
+			}
+		}
+		br.close();
 	}
 
 	private static void buildItemAndBrandDicts(DataSet ds, String fMemberRel) throws IOException {
