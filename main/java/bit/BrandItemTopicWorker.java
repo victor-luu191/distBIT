@@ -241,6 +241,7 @@ public class BrandItemTopicWorker implements Runnable {
 		out.close();
 	}
 
+	@SuppressWarnings("unused")
 	private void write(DoubleTable table, int numRow, int numCol, String fName)
 			throws IOException, Exception {
 		
@@ -368,7 +369,7 @@ public class BrandItemTopicWorker implements Runnable {
 		for (int i = 0; i < numCol; i++) {
 			double marginCount = counts.get(numRow, i);
 			for (int j = 0; j < numRow; j++) {
-
+				probs[j][i] = counts.get(j, i)/marginCount;
 			}
 		}
 

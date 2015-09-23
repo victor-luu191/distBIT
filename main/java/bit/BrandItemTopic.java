@@ -32,6 +32,9 @@ public class BrandItemTopic extends PsApplication {
 		bitConfig = new BrandItemTopicWorker.Config();	// initial config is default config
 		bitConfig.burnIn = config.burnIn;
 		bitConfig.numIter = config.numIter;
+		bitConfig.priors = config.priors;
+		bitConfig.numTopic = config.numTopic;
+		bitConfig.allPairs = config.allPairs;
 		bitConfig.staleness = config.staleness;
 		
 		bitConfig.topicUserId = topicUserTableId;
@@ -39,6 +42,7 @@ public class BrandItemTopic extends PsApplication {
 		bitConfig.itemTopicId = itemTopicTableId;
 		bitConfig.brandTopicId = brandTopicTableId;
 		bitConfig.itemBrandId = itemBrandTableId;
+		
 		
 		bitConfig.outputPrefix = config.outputPrefix;
 		
@@ -89,9 +93,11 @@ public class BrandItemTopic extends PsApplication {
 		
 		
 		new CountTables(tableIds, dims, staleness);
+		config.allPairs = buildPairs(dims.numBrand);
 		
 		// Configure loss table
 		LossRecorder.createLossTable();
+		
 	}
 
 	@Override
