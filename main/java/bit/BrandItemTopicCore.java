@@ -79,14 +79,20 @@ public class BrandItemTopicCore {
 		
 		int numItem = dists.itemBrand.length;
 		int numTopic = dists.topicUser.length;
+		int numBrand = dists.brandTopic.length;
+		
 		int[] adoptFreq = compFreqAdopts(uIndex, ds);
 		double ll = 0f;
 		for (int itemIndex = 0; itemIndex < numItem; itemIndex ++) {
 			if (adoptFreq[itemIndex] > 0) {
-				double firstTerm = dists.decisionUser[0][uIndex] * topicBasedProb(uIndex, itemIndex, dists, numTopic);
+				double firstTerm = dists.decisionUser[0][uIndex] * topicBasedLikelihood(uIndex, itemIndex, dists, numTopic);
 				double sum = 0f;
 				for (int topicIndex = 0; topicIndex < numTopic; topicIndex++) {
-					sum += brandBasedProb(uIndex, itemIndex, topicIndex, dists);
+					
+					// given the topic, compute the expected likelihood that the user adopted the item based on brand
+					double brandBasedLikelihood = brandBasedLikelihood(uIndex, itemIndex, topicIndex, dists, numBrand);
+					// add to total likelihood, weighted by the user's preference on the topic
+					sum += dists.topicUser[topicIndex][uIndex] * brandBasedLikelihood;	
 				}
 				double secondTerm = dists.decisionUser[1][uIndex] * sum;
 				ll += adoptFreq[itemIndex] * Math.log(firstTerm + secondTerm);
@@ -95,17 +101,21 @@ public class BrandItemTopicCore {
 		return ll;
 	}
 	
-	private static double brandBasedProb(int uIndex, int itemIndex, int topicIndex, Distributions dists) {
-		// TODO Auto-generated method stub
-		return 0;
+	private static double brandBasedLikelihood(int uIndex, int itemIndex, int topicIndex, Distributions dists, int numBrand) {
+		double likelihood = 0f;
+		for (int bIndex = 0; bIndex < numBrand; bIndex++) {
+			likelihood += dists.brandTopic[bIndex][topicIndex] * dists.itemBrand[itemIndex][bIndex];
+		}
+		
+		return likelihood;
 	}
 
-	private static double topicBasedProb(int uIndex, int itemIndex, Distributions dists, int numTopic) {
-		double prob = 0f;
+	private static double topicBasedLikelihood(int uIndex, int itemIndex, Distributions dists, int numTopic) {
+		double likelihood = 0f;
 		for (int tIndex = 0; tIndex < numTopic; tIndex++) {
-			prob += dists.topicUser[tIndex][uIndex] * dists.itemTopic[itemIndex][tIndex];
+			likelihood += dists.topicUser[tIndex][uIndex] * dists.itemTopic[itemIndex][tIndex];
 		}
-		return prob;
+		return likelihood;
 	}
 
 	private static int[] compFreqAdopts(int uIndex, DataSet ds) {
