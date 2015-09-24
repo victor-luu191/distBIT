@@ -15,13 +15,11 @@ import org.petuum.jbosen.table.DoubleTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
-
+import defs.AdoptHistory;
 import defs.Adoption;
 import defs.CountTables;
 import defs.Dimensions;
 import defs.Distributions;
-import defs.AdoptHistory;
 import defs.Item;
 import defs.Latent;
 import defs.Pair;
@@ -340,7 +338,7 @@ public class BrandItemTopicWorker implements Runnable {
 		
 		
 		// Actual training period
-		long trainBegin = System.currentTimeMillis();
+//		long trainBegin = System.currentTimeMillis();
 		for (int iter=0; iter < numIter; iter++) {
 			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
 				AdoptHistory instance = ds.histories.get(uIndex);

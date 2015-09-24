@@ -7,10 +7,8 @@ import org.petuum.jbosen.PsTableGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import defs.CountTables;
 import defs.Dimensions;
 import defs.Pair;
-import defs.TableIds;
 
 public class BrandItemTopic extends PsApplication {
 
