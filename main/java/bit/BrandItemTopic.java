@@ -35,7 +35,7 @@ public class BrandItemTopic extends PsApplication {
 		bitConfig.priors = config.priors;
 		bitConfig.numTopic = config.numTopic;
 //		bitConfig.dims = config.dims;
-		bitConfig.allPairs = config.allPairs;
+//		bitConfig.allPairs = config.allPairs;
 		bitConfig.staleness = config.staleness;
 		
 		bitConfig.topicUserId = topicUserTableId;
@@ -99,7 +99,7 @@ public class BrandItemTopic extends PsApplication {
 		PsTableGroup.createDenseDoubleTable(itemBrandTableId, staleness, dims.numBrand);
 		
 
-		config.allPairs = buildPairs(dims.numBrand);
+		bitConfig.allPairs = buildPairs(dims.numBrand);
 		
 		// Configure loss table
 		LossRecorder.createLossTable();

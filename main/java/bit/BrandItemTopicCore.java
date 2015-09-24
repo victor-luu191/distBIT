@@ -1,22 +1,23 @@
 package bit;
 
+import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
 
 import utils.Converters;
 import utils.Stats;
 import cc.mallet.util.Randoms;
 import defs.Adoption;
-import defs.Latent;
 import defs.Brand;
 import defs.CountTables;
 import defs.Dimensions;
 import defs.Item;
+import defs.Latent;
 import defs.Pair;
 import defs.Priors;
 
 public class BrandItemTopicCore {
 	
-	static Randoms random;
+	static Randoms random = new Randoms();
 	static DataSet ds;
 	
 	
@@ -39,16 +40,13 @@ public class BrandItemTopicCore {
 		int cBrandIndex = latent.brands.get(userIndex).get(adoptIndex);
 		
 		countTables.decTopicCount(cTopic, userIndex, itemIndex, cBrandIndex, cDecision);
-		System.out.println("dec topic count done");
 		int nTopic = sampleNewTopic(userIndex, itemIndex, cDecision, cBrandIndex, countTables, priors);
-		System.out.println("sample new topic done");
 		countTables.incTopicCount(nTopic, userIndex, itemIndex, cBrandIndex, cDecision);
-		System.out.println("inc topic count done");
 		latent.topics.get(userIndex).set(adoptIndex, nTopic);
 	}
 	
 	public static void updatePair(Adoption adopt, CountTables countTables, Latent latent, 
-			Priors priors, Pair[] allPairs) {
+			Priors priors, Pair[] allPairs, DataSet ds) {
 		
 		int adoptIndex = adopt.index; 
 		int userIndex = adopt.userIndex; 
@@ -60,7 +58,7 @@ public class BrandItemTopicCore {
 		
 		Pair cPair = new Pair(cDecision, cBrandIndex);
 		countTables.decPairCount(cPair, userIndex, itemIndex, cTopic);
-		Pair nPair = sampleNewPair(userIndex, itemIndex, cTopic, countTables, priors, allPairs);
+		Pair nPair = sampleNewPair(userIndex, itemIndex, cTopic, countTables, priors, allPairs, ds);
 		countTables.incPairCount(nPair, userIndex, itemIndex, cTopic);
 		
 		int nBrandIndex = nPair.getBrandIndex();
@@ -98,16 +96,16 @@ public class BrandItemTopicCore {
 	}
 
 	private static Pair sampleNewPair(int userIndex, int itemIndex, int cTopic, 
-			CountTables countTables, Priors priors, Pair[] allPairs) {
+			CountTables countTables, Priors priors, Pair[] allPairs, DataSet ds) {
 		
-		double[] weights = estWeights(userIndex, itemIndex, cTopic, countTables, priors);
+		double[] weights = estWeights(userIndex, itemIndex, cTopic, countTables, priors, ds);
 		int index = random.nextDiscrete(weights, Stats.sum(weights));
 		
 		return allPairs[index];
 	}
 
 	private static double[] estWeights(int userIndex, int itemIndex, int cTopic, 
-			CountTables countTables,  Priors priors) {
+			CountTables countTables,  Priors priors, DataSet ds) {
 		
 		Dimensions dims = countTables.dims;
 		double wTopicBased = estTopicBased(userIndex, itemIndex, cTopic, countTables, priors);
@@ -117,20 +115,23 @@ public class BrandItemTopicCore {
 		
 		double brandBasedCount = countTables.decisionUser.get(1, userIndex);
 		double nom = brandBasedCount + priors.beta;
-		double sumBrand4Topic = countTables.brandTopic.get(numBrand, cTopic); 		// getSumBrand4Topic()[cTopic]
+		double sumBrand4Topic = countTables.brandTopic.get(numBrand, cTopic); 		
 		double denom = sumBrand4Topic + numBrand * priors.alpha;
 		double scalar = nom/denom;
 		double[] coOccurWithItem = new double[numBrand];
-		for (int bIndex=0; bIndex < numBrand; bIndex++) {
-			if (isBrandOfItem(bIndex, itemIndex)) {
+		RealVector tbCounts = new ArrayRealVector(numBrand);
+		
+		for (int bIndex = 0; bIndex < numBrand; bIndex++) {
+			
+			tbCounts.setEntry(bIndex, countTables.brandTopic.get(bIndex, cTopic));
+			if (isBrandOfItem(bIndex, itemIndex, ds)) {
 				double brandItemCount = countTables.itemBrand.get(itemIndex, bIndex);
 				double bNom = brandItemCount + priors.beta;
-				double marginCountOfBrand = countTables.itemBrand.get(numItem, bIndex); 	// getMarginCountOfBrand()[bIndex];
+				double marginCountOfBrand = countTables.itemBrand.get(numItem, bIndex); 	
 				double bDenom = marginCountOfBrand + numItem * priors.beta;
 				coOccurWithItem[bIndex] = bNom/bDenom;
 			}
 		}
-		RealVector tbCounts = Converters.toVector(countTables.brandTopic.get(cTopic));
 		RealVector coOccurs = Converters.arr2Vector(coOccurWithItem);
 		RealVector wBrandBased = tbCounts.mapAdd(priors.alpha).mapMultiply(scalar).ebeMultiply(coOccurs);
 		
@@ -138,7 +139,7 @@ public class BrandItemTopicCore {
 		return weights;
 	}
 	
-	private static boolean isBrandOfItem(int bIndex, int itemIndex) {
+	private static boolean isBrandOfItem(int bIndex, int itemIndex, DataSet ds) {
 		
 		Item item = (Item) ds.itemDict.lookupObject(itemIndex);
 		Brand brand = (Brand) ds.brandDict.lookupObject(bIndex);

@@ -123,7 +123,7 @@ public class BrandItemTopicWorker implements Runnable {
 			int itemIndex = ds.itemDict.lookupIndex(new Item(itemId));
 			Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
 			BrandItemTopicCore.updateTopic(adopt, countTables, latent, priors);
-			BrandItemTopicCore.updatePair(adopt, countTables, latent, priors, allPairs);
+			BrandItemTopicCore.updatePair(adopt, countTables, latent, priors, allPairs, ds);
 		}
 	}
 	

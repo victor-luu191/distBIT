@@ -25,7 +25,6 @@ class DataReader {
 		int numBrand = ds.brandDict.size();
 		int numItem = ds.itemDict.size();
 		Dimensions dims = new Dimensions(numUser, numBrand, numItem);
-		System.out.println("Loaded data set");
 		return dims;
 	}
 
