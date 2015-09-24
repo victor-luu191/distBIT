@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class AdoptHistory {
 	public String uId;
-	private ArrayList<String> item_ids;
+	private ArrayList<String> adoptedItem_ids;
 
 	public AdoptHistory(String uId) {
 		this.uId = uId;
@@ -19,14 +19,14 @@ public class AdoptHistory {
 	public AdoptHistory(String uId, String firstItemId) {
 		this.uId = uId;
 		setItemIds(new ArrayList<String>());
-		item_ids.add(firstItemId);
+		adoptedItem_ids.add(firstItemId);
 	}
 
 	public ArrayList<String> getItemIds() {
-		return item_ids;
+		return adoptedItem_ids;
 	}
 
 	public void setItemIds(ArrayList<String> item_ids) {
-		this.item_ids = item_ids;
+		this.adoptedItem_ids = item_ids;
 	}
 }

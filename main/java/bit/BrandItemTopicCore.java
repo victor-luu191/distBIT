@@ -1,7 +1,11 @@
 package bit;
 
+import java.util.ArrayList;
+
 import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.linear.RealVector;
+
+import com.sun.org.apache.bcel.internal.generic.NEW;
 
 import utils.Converters;
 import utils.Stats;
@@ -75,7 +79,7 @@ public class BrandItemTopicCore {
 		
 		int numItem = dists.itemBrand.length;
 		int numTopic = dists.topicUser.length;
-		int[] adoptFreq = compFreqAdopts(uIndex, ds.histories.get(uIndex));
+		int[] adoptFreq = compFreqAdopts(uIndex, ds);
 		double ll = 0f;
 		for (int itemIndex = 0; itemIndex < numItem; itemIndex ++) {
 			if (adoptFreq[itemIndex] > 0) {
@@ -101,9 +105,17 @@ public class BrandItemTopicCore {
 		return 0;
 	}
 
-	private static int[] compFreqAdopts(int uIndex, AdoptHistory hisAdoptHistory) {
-		// TODO Auto-generated method stub
-		return null;
+	private static int[] compFreqAdopts(int uIndex, DataSet ds) {
+		
+		int numItem = ds.itemDict.size();
+		int[] adoptFreqs = new int[numItem];
+		AdoptHistory adoptHistory = ds.histories.get(uIndex);
+		ArrayList<String> adoptedItems = adoptHistory.getItemIds();
+		for (String itemId : adoptedItems) {
+			int itemIndex = ds.itemDict.lookupIndex(new Item(itemId));
+			adoptFreqs[itemIndex]++ ;
+		}
+		return adoptFreqs;
 	}
 
 	private static int sampleNewTopic(int userIndex, int itemIndex, int cDecision, int cBrandIndex, 
