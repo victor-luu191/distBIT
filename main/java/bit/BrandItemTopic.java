@@ -102,7 +102,7 @@ public class BrandItemTopic extends PsApplication {
 		bitConfig.allPairs = buildPairs(dims.numBrand);
 		
 		// Configure loss table
-		LossRecorder.createLossTable();
+		LikelihoodRecorder.createLossTable();
 		
 	}
 

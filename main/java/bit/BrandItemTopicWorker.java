@@ -56,7 +56,7 @@ public class BrandItemTopicWorker implements Runnable {
 	private Pair[] allPairs;
 	private Dimensions dims;
 
-	private LossRecorder lossRecorder = new LossRecorder();
+	private LikelihoodRecorder lossRecorder = new LikelihoodRecorder();
 
 	public static class Config {
 		public int numWorkers = -1;
