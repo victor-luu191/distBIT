@@ -26,7 +26,7 @@ public class BrandItemTopic extends PsApplication {
 	public BrandItemTopic(BrandItemTopicConfig config) {
 		
 		this.config = config;
-		// TODO: pass global config to each worker 
+		// Pass global config to each worker 
 		bitConfig = new BrandItemTopicWorker.Config();	// initial config is default config
 		bitConfig.burnIn = config.burnIn;
 		bitConfig.numIter = config.numIter;

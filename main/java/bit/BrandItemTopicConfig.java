@@ -24,8 +24,8 @@ public class BrandItemTopicConfig extends PsConfig {
 	@Option(name = "-numIter", required = false, usage = "Number of iterations for actual training period. Default = 500")
 	public int numIter = 500;
 	
-	@Option(name = "-numTopic", required = false, usage = "Number of topics for BIT")
-	public int numTopic = 10;
+	@Option(name = "-numTopic", required = false, usage = "Number of topics for BIT. Default = 2")
+	public int numTopic = 2;
 	
 	@Option(name = "-outputPrefix", required = false, usage = "Output to outputPrefix.")
 	public String outputPrefix = "";

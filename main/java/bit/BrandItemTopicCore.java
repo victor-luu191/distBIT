@@ -85,7 +85,9 @@ public class BrandItemTopicCore {
 		double ll = 0f;
 		for (int itemIndex = 0; itemIndex < numItem; itemIndex ++) {
 			if (adoptFreq[itemIndex] > 0) {
-				double firstTerm = dists.decisionUser[0][uIndex] * topicBasedLikelihood(uIndex, itemIndex, dists, numTopic);
+				double topicBasedLikelihood = topicBasedLikelihood(uIndex, itemIndex, dists, numTopic);
+				double firstTerm = dists.decisionUser[0][uIndex] * topicBasedLikelihood;
+				
 				double sum = 0f;
 				for (int topicIndex = 0; topicIndex < numTopic; topicIndex++) {
 					
@@ -135,7 +137,12 @@ public class BrandItemTopicCore {
 										CountTables countTables, Priors priors) {
 		
 		int numTopic = countTables.dims.numTopic;
-		RealVector topicCountsOfUser = Converters.toVector(countTables.topicUser.get(userIndex));
+		RealVector topicCountsOfUser = new ArrayRealVector(numTopic);
+		for (int tIndex = 0; tIndex < numTopic; tIndex++) {
+			double topicCount = countTables.topicUser.get(tIndex, userIndex);
+			topicCountsOfUser.setEntry(tIndex, topicCount);
+		}
+		
 		RealVector posteriorCounts = topicCountsOfUser.mapAdd(priors.theta);
 		RealVector weights;
 		
@@ -152,7 +159,6 @@ public class BrandItemTopicCore {
 			for (int tIndex=0; tIndex < numTopic; tIndex++) {
 				coOccurWithBrand[tIndex] = coOccurProbWithBrand(tIndex, cBrandIndex, countTables, priors);
 			}
-			System.out.println("co-occur probs with brand estimated");
 			weights = posteriorCounts.ebeMultiply(Converters.arr2Vector(coOccurWithBrand));
 		}
 		int nTopic = random.nextDiscrete(weights.toArray(), Stats.sum(weights));

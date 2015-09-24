@@ -58,6 +58,7 @@ public class BrandItemTopicWorker implements Runnable {
 
 	private int period;
 
+	// default config
 	public static class Config {
 		public int numWorkers = -1;
         // Worker's rank among all threads across all nodes.
@@ -77,15 +78,15 @@ public class BrandItemTopicWorker implements Runnable {
 //													brandTopicId, itemBrandId);
 		
 		public Priors priors = new Priors();
-		public int numTopic = 0;
+		
 		public String outputPrefix = "";
 		public Pair[] allPairs = new Pair[0];
+		public int numTopic = 2;
 		public Dimensions dims = new Dimensions();
 		int period = 10;
 	}
 	
 	public BrandItemTopicWorker(Config config, int workerRank) {
-		// TODO Auto-generated constructor stub
 		assert config.numWorkers != -1;
         this.numWorkers = config.numWorkers;
 
@@ -114,6 +115,10 @@ public class BrandItemTopicWorker implements Runnable {
         
         // workerId
         this.workerRank = workerRank;
+        
+        llRecorder.registerField("snapshot");
+//        llRecorder.registerField("userIndex");
+        llRecorder.registerField("logLikelihood");
 	}
 
 	
@@ -336,7 +341,7 @@ public class BrandItemTopicWorker implements Runnable {
 		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
 		long burnInElapsed = System.currentTimeMillis() - burnInBegin;
 		if (workerRank == 0) {
-			logger.info("burnIn elapsed " + burnInElapsed);
+			logger.info("burnIn elapsed " + burnInElapsed + "ms");
 		}
 		
 		
@@ -349,17 +354,20 @@ public class BrandItemTopicWorker implements Runnable {
 				updateLatents(adoptions, uIndex);
 				PsTableGroup.clock();
 			}
-			// Evaluate and record log likelihoods of user in [userBegin, userEnd) for each period 
+			// Evaluate and record total log likelihood of users in [userBegin, userEnd) for each period 
 			if (iter % period == 0) {// iteration is a multiple of period
 				int snapshot = iter/period;
 				Distributions dists = toDistributions(countTables, priors);
+				double totalLL = 0f;
 				for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
 					double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
 					assert !Double.isNaN(llOfUserData);
-					llRecorder.incLoss(snapshot, "userIndex", uIndex);
-					llRecorder.incLoss(snapshot, "logLikelihood", llOfUserData);
+					totalLL += llOfUserData;
+//					llRecorder.incLoss(snapshot, "userIndex", uIndex);
+					
 				}
-				
+				llRecorder.incLoss(snapshot, "snapshot", snapshot);
+				llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
 			}
 		}
 		
