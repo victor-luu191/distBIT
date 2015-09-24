@@ -15,9 +15,10 @@ public class Converters {
 
 		RealVector v = new ArrayRealVector();
 		DoubleColumnIterator iter = row.iterator();
-		iter.advance();
+		
 		while (iter.hasNext()) {
-			v.append(iter.getValue());
+			iter.advance();
+			v = v.append(iter.getValue());
 		}
 		
 		return v;

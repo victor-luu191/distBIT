@@ -119,7 +119,8 @@ public class BrandItemTopicWorker implements Runnable {
 	private void updateLatents(ArrayList<String> adoptions, int uIndex) {
 		for (int adoptIndex = 0; adoptIndex < adoptions.size(); adoptIndex++) {
 			
-			int itemIndex = ds.itemDict.lookupIndex(new Item(adoptions.get(adoptIndex)));
+			String itemId = adoptions.get(adoptIndex);
+			int itemIndex = ds.itemDict.lookupIndex(new Item(itemId));
 			Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
 			BrandItemTopicCore.updateTopic(adopt, countTables, latent, priors);
 			BrandItemTopicCore.updatePair(adopt, countTables, latent, priors, allPairs);
@@ -313,15 +314,20 @@ public class BrandItemTopicWorker implements Runnable {
 		// Init the partition of tables for [userBegin, userEnd), excluding last user
 		// Since each thread initialize part of count tables, use barrier to
         // ensure initialization completes.
+		long initBegin = System.currentTimeMillis();
 		initTables(countTables, latent, userBegin, userEnd);
 		PsTableGroup.globalBarrier();
+		long initTimeElapsed = System.currentTimeMillis() - initBegin;
+		if (workerRank == 0) {
+			logger.info("Initialization done after " + initTimeElapsed + "ms");
+		}
 		
 		// Burn-in period
 		long burnInBegin = System.currentTimeMillis();
 		for (int iter=0; iter < burnIn; iter++) {
 			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-				AdoptHistory instance = ds.histories.get(uIndex);
-				ArrayList<String> adoptions = instance.getItemIds();
+				AdoptHistory history = ds.histories.get(uIndex);
+				ArrayList<String> adoptions = history.getItemIds();
 				updateLatents(adoptions, uIndex);
 				PsTableGroup.clock();
 			}

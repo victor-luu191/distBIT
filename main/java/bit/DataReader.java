@@ -25,7 +25,7 @@ class DataReader {
 		int numBrand = ds.brandDict.size();
 		int numItem = ds.itemDict.size();
 		Dimensions dims = new Dimensions(numUser, numBrand, numItem);
-		System.out.println("Finished loading data set");
+		System.out.println("Loaded data set");
 		return dims;
 	}
 
@@ -84,6 +84,7 @@ class DataReader {
 			br.close();
 			ds.itemDict = new Alphabet(allItems.toArray());
 			ds.brandDict = new Alphabet(allBrands.toArray());
+			System.out.println("dicts built");
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(-1);

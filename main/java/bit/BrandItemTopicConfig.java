@@ -19,7 +19,7 @@ public class BrandItemTopicConfig extends PsConfig {
 //	public int numEpochs = 10;
 
 	@Option(name = "-burnIn", required = false, usage = "Number of iterations for burn-in period. Default = 100")
-	public int burnIn = 100;
+	public int burnIn = 1;
 	
 	@Option(name = "-numIter", required = false, usage = "Number of iterations for actual training period. Default = 500")
 	public int numIter = 500;

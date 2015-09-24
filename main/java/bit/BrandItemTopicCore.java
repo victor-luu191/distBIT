@@ -39,8 +39,11 @@ public class BrandItemTopicCore {
 		int cBrandIndex = latent.brands.get(userIndex).get(adoptIndex);
 		
 		countTables.decTopicCount(cTopic, userIndex, itemIndex, cBrandIndex, cDecision);
+		System.out.println("dec topic count done");
 		int nTopic = sampleNewTopic(userIndex, itemIndex, cDecision, cBrandIndex, countTables, priors);
+		System.out.println("sample new topic done");
 		countTables.incTopicCount(nTopic, userIndex, itemIndex, cBrandIndex, cDecision);
+		System.out.println("inc topic count done");
 		latent.topics.get(userIndex).set(adoptIndex, nTopic);
 	}
 	
@@ -69,26 +72,26 @@ public class BrandItemTopicCore {
 	private static int sampleNewTopic(int userIndex, int itemIndex, int cDecision, int cBrandIndex, 
 										CountTables countTables, Priors priors) {
 		
-		Dimensions dims = countTables.dims;
+		int numTopic = countTables.dims.numTopic;
 		RealVector topicCountsOfUser = Converters.toVector(countTables.topicUser.get(userIndex));
+		RealVector posteriorCounts = topicCountsOfUser.mapAdd(priors.theta);
 		RealVector weights;
-		int numTopic = dims.numTopic;
+		
 		if (cDecision == 0) {// topic-item
 
 			double[] coOccurWithItem = new double[numTopic]; 
 			for (int tIndex=0; tIndex < numTopic; tIndex++) {
 				coOccurWithItem[tIndex] = coOccurProbWithItem(tIndex, itemIndex, countTables, priors);
 			}
-
-			weights = topicCountsOfUser.mapAdd(priors.theta).ebeMultiply(Converters.arr2Vector(coOccurWithItem));
+			weights = posteriorCounts.ebeMultiply(Converters.arr2Vector(coOccurWithItem));
 
 		} else {// topic-brand-item
 			double[] coOccurWithBrand = new double[numTopic];
 			for (int tIndex=0; tIndex < numTopic; tIndex++) {
 				coOccurWithBrand[tIndex] = coOccurProbWithBrand(tIndex, cBrandIndex, countTables, priors);
 			}
-
-			weights = topicCountsOfUser.mapAdd(priors.theta).ebeMultiply(Converters.arr2Vector(coOccurWithBrand));
+			System.out.println("co-occur probs with brand estimated");
+			weights = posteriorCounts.ebeMultiply(Converters.arr2Vector(coOccurWithBrand));
 		}
 		int nTopic = random.nextDiscrete(weights.toArray(), Stats.sum(weights));
 		return nTopic;

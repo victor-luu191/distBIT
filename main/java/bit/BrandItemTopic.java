@@ -61,13 +61,13 @@ public class BrandItemTopic extends PsApplication {
 			return;
 		}
 		
-		long trainTimeBegin = System.currentTimeMillis();
+		long expTimeBegin = System.currentTimeMillis();
 		BrandItemTopic bitThreads = new BrandItemTopic(config);
 		bitThreads.run(config);
 		
 		if (config.clientId == 0) {
-			long trainTimeElapsed = System.currentTimeMillis() - trainTimeBegin;
-			logger.info("Finished training after " + trainTimeElapsed + "(ms)");
+			long expTimeElapsed = System.currentTimeMillis() - expTimeBegin;
+			logger.info("Finished training after " + expTimeElapsed + "(ms)");
 		}
 		
 	}
