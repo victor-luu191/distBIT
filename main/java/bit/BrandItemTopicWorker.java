@@ -54,7 +54,9 @@ public class BrandItemTopicWorker implements Runnable {
 	private Pair[] allPairs;
 	private Dimensions dims;
 
-	private LikelihoodRecorder lossRecorder = new LikelihoodRecorder();
+	private LikelihoodRecorder llRecorder = new LikelihoodRecorder();
+
+	private int period;
 
 	public static class Config {
 		public int numWorkers = -1;
@@ -79,6 +81,7 @@ public class BrandItemTopicWorker implements Runnable {
 		public String outputPrefix = "";
 		public Pair[] allPairs = new Pair[0];
 		public Dimensions dims = new Dimensions();
+		int period = 10;
 	}
 	
 	public BrandItemTopicWorker(Config config, int workerRank) {
@@ -107,6 +110,7 @@ public class BrandItemTopicWorker implements Runnable {
         
         this.priors = config.priors;
         this.allPairs = config.allPairs;
+        this.period = config.period;
         
         // workerId
         this.workerRank = workerRank;
@@ -232,7 +236,6 @@ public class BrandItemTopicWorker implements Runnable {
 
 
 	private void write(double[][] arr, String fName) throws IOException {
-		// TODO Auto-generated method stub
 		BufferedWriter out = null;
 		try {
 			out = new BufferedWriter(new FileWriter(fName));
@@ -346,9 +349,20 @@ public class BrandItemTopicWorker implements Runnable {
 				updateLatents(adoptions, uIndex);
 				PsTableGroup.clock();
 			}
+			// Evaluate and record log likelihoods of user in [userBegin, userEnd) for each period 
+			if (iter % period == 0) {// iteration is a multiple of period
+				int snapshot = iter/period;
+				Distributions dists = toDistributions(countTables, priors);
+				for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+					double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
+					assert !Double.isNaN(llOfUserData);
+					llRecorder.incLoss(snapshot, "userIndex", uIndex);
+					llRecorder.incLoss(snapshot, "logLikelihood", llOfUserData);
+				}
+				
+			}
 		}
 		
-		// TODO: Add loss evaluation here
 		PsTableGroup.globalBarrier();	// sync all resulting count tables
 		
 		Distributions distributions = toDistributions(countTables, priors);
@@ -356,7 +370,7 @@ public class BrandItemTopicWorker implements Runnable {
 		// Print all results.
         if (workerRank == 0) {
             logger.info("\n" + printExpDetails() + "\n" +
-                    lossRecorder.printAllLoss());
+                    llRecorder.printAllLoss());
             if (!outputPrefix.equals("")) {
                 try {
 					outputCsvToDisk(distributions, outputPrefix);

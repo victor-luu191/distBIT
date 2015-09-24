@@ -51,8 +51,8 @@ public class BrandItemTopicConfig extends PsConfig {
 
 	public Dimensions dims;
 	
-//	@Option(name = "-snapshot", required = false, usage = "Length of each snapshot. Default = 50")
-//	public int snapshot = 50;
+	@Option(name = "-period", required = false, usage = "Length of each period. Default = 10")
+	public int period = 10;
 	
 //	@Option(name = "-seed", required = false, usage = "Seed for the sampler. Default = 123")
 //	public int seed = 123;
