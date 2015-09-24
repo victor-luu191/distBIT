@@ -83,10 +83,10 @@ public class BrandItemTopicCore {
 		double ll = 0f;
 		for (int itemIndex = 0; itemIndex < numItem; itemIndex ++) {
 			if (adoptFreq[itemIndex] > 0) {
-				double firstTerm = dists.decisionUser[0][uIndex] * topicBasedProb(uIndex, itemIndex);
+				double firstTerm = dists.decisionUser[0][uIndex] * topicBasedProb(uIndex, itemIndex, dists, numTopic);
 				double sum = 0f;
 				for (int topicIndex = 0; topicIndex < numTopic; topicIndex++) {
-					sum += brandBasedProb(uIndex, itemIndex, topicIndex);
+					sum += brandBasedProb(uIndex, itemIndex, topicIndex, dists);
 				}
 				double secondTerm = dists.decisionUser[1][uIndex] * sum;
 				ll += adoptFreq[itemIndex] * Math.log(firstTerm + secondTerm);
@@ -95,14 +95,17 @@ public class BrandItemTopicCore {
 		return ll;
 	}
 	
-	private static double brandBasedProb(int uIndex, int itemIndex, int topicIndex) {
+	private static double brandBasedProb(int uIndex, int itemIndex, int topicIndex, Distributions dists) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	private static double topicBasedProb(int uIndex, int itemIndex) {
-		// TODO Auto-generated method stub
-		return 0;
+	private static double topicBasedProb(int uIndex, int itemIndex, Distributions dists, int numTopic) {
+		double prob = 0f;
+		for (int tIndex = 0; tIndex < numTopic; tIndex++) {
+			prob += dists.topicUser[tIndex][uIndex] * dists.itemTopic[itemIndex][tIndex];
+		}
+		return prob;
 	}
 
 	private static int[] compFreqAdopts(int uIndex, DataSet ds) {
