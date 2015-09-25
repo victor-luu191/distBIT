@@ -10,6 +10,7 @@ import java.util.Random;
 
 import org.petuum.jbosen.PsTableGroup;
 import org.petuum.jbosen.row.double_.DenseDoubleRow;
+import org.petuum.jbosen.row.double_.DoubleColumnIterator;
 import org.petuum.jbosen.row.double_.DoubleRow;
 import org.petuum.jbosen.table.DoubleTable;
 import org.slf4j.Logger;
@@ -121,7 +122,123 @@ public class BrandItemTopicWorker implements Runnable {
         llRecorder.registerField("logLikelihood");
 	}
 
-	
+	public void run() {
+		 
+		DoubleTable topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
+		DoubleTable decisionUser = PsTableGroup.getDoubleTable(decisionUserTableId);
+		DoubleTable itemTopic = PsTableGroup.getDoubleTable(itemTopicTableId);
+		DoubleTable brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
+		DoubleTable itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
+		
+		countTables = new CountTables(dims, topicUser, decisionUser, itemTopic, brandTopic, itemBrand);
+		
+		latent = new Latent();
+		int numUser = countTables.dims.numUser;
+		int numUserPerWorker = numUser/numWorkers;
+		if (workerRank == 0) {
+			logger.info("Number of users per worker " + numUserPerWorker + ", burnIn " + burnIn + ", numIter " + 
+					numIter);
+		}
+		
+		userBegin = workerRank * numUserPerWorker;
+		userEnd = (workerRank == numWorkers - 1)? numUser : (userBegin + numUserPerWorker);
+		
+		// Init the partition of tables for [userBegin, userEnd), excluding last user
+		// Since each thread initialize part of count tables, use barrier to
+        // ensure initialization completes.
+		long initBegin = System.currentTimeMillis();
+		initTables(countTables, latent, userBegin, userEnd);
+		PsTableGroup.globalBarrier();
+
+		// print out to check if initialization has any bug e.g. negative counts
+		if (workerRank == 0) {
+			print(countTables.topicUser, dims.numTopic, "topicUser");
+			print(countTables.decisionUser, Dimensions.numDecision, "decisionUser");
+			print(countTables.itemTopic, dims.numItem, "itemTopic");
+			print(countTables.brandTopic, dims.numBrand, "brandTopic");
+			print(countTables.itemBrand, dims.numItem, "itemBrand");
+		}
+		
+		long initTimeElapsed = System.currentTimeMillis() - initBegin;
+		if (workerRank == 0) {
+			logger.info("Initialization done after " + initTimeElapsed + "ms");
+		}
+		
+		// Burn-in period
+		long burnInBegin = System.currentTimeMillis();
+		for (int iter=0; iter < burnIn; iter++) {
+			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+				AdoptHistory history = ds.histories.get(uIndex);
+				ArrayList<String> adoptions = history.getItemIds();
+				updateLatents(adoptions, uIndex);
+				PsTableGroup.clock();
+			}
+		}
+		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
+		long burnInElapsed = System.currentTimeMillis() - burnInBegin;
+		if (workerRank == 0) {
+			logger.info("burnIn elapsed " + burnInElapsed + "ms");
+		}
+		
+		
+		// Actual training period
+//		long trainBegin = System.currentTimeMillis();
+		for (int iter=0; iter < numIter; iter++) {
+			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+				AdoptHistory instance = ds.histories.get(uIndex);
+				ArrayList<String> adoptions = instance.getItemIds();
+				updateLatents(adoptions, uIndex);
+				PsTableGroup.clock();
+			}
+			// Evaluate and record total log likelihood of users in [userBegin, userEnd) for each period 
+			if (iter % period == 0) {// iteration is a multiple of period
+				int snapshot = iter/period;
+				Distributions dists = toDistributions(countTables, priors);
+				double totalLL = 0f;
+				for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+					double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
+					assert !Double.isNaN(llOfUserData);
+					totalLL += llOfUserData;
+//					llRecorder.incLoss(snapshot, "userIndex", uIndex);
+					
+				}
+				llRecorder.incLoss(snapshot, "snapshot", snapshot);
+				llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
+			}
+		}
+		
+		PsTableGroup.globalBarrier();	// sync all resulting count tables
+		
+		Distributions distributions = toDistributions(countTables, priors);
+		
+		// Print all results.
+        if (workerRank == 0) {
+            logger.info("\n" + printExpDetails() + "\n" +
+                    llRecorder.printAllLoss());
+            if (!outputPrefix.equals("")) {
+                try {
+					outputCsvToDisk(distributions, outputPrefix);
+				} catch (Exception e) {
+					logger.error("Failed to output to disk");
+					e.printStackTrace();
+				}
+            }
+        }
+	}
+
+	private void print(DoubleTable table, int numRow, String tableName) {
+		
+		System.out.println(tableName);
+		for (int row = 0; row < numRow; row++) {
+			DoubleColumnIterator iter = table.get(row).iterator();
+			String line = "";
+			while (iter.hasNext()) {
+				iter.advance();
+				line += iter.getValue() + ",";
+			}
+			System.out.println(line);
+		}
+	}
 
 	private void updateLatents(ArrayList<String> adoptions, int uIndex) {
 		for (int adoptIndex = 0; adoptIndex < adoptions.size(); adoptIndex++) {
@@ -175,6 +292,9 @@ public class BrandItemTopicWorker implements Runnable {
 		for (int i=0; i < adoptions.size(); i++) {
 			int itemIndex = ds.itemDict.lookupIndex(new Item(adoptions.get(i)));
 			int topicIndex = random.nextInt(dims.numTopic);
+			
+			countTables.topicUser.inc(topicIndex, uIndex, 1);
+			
 			latent.topics.get(uIndex).add(topicIndex);	// init topic for adoption (u,i)
 			countTables.itemTopic.inc(itemIndex, topicIndex, 1);
 			countTables.itemTopic.inc(dims.numItem, topicIndex, 1);	// inc marginal count
@@ -254,7 +374,6 @@ public class BrandItemTopicWorker implements Runnable {
 		out.close();
 	}
 
-	@SuppressWarnings("unused")
 	private void write(DoubleTable table, int numRow, int numCol, String fName)
 			throws IOException, Exception {
 		
@@ -296,99 +415,7 @@ public class BrandItemTopicWorker implements Runnable {
         return exp;
 	}
 	
-	public void run() {
-		 
-		DoubleTable topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
-		DoubleTable decisionUser = PsTableGroup.getDoubleTable(decisionUserTableId);
-		DoubleTable itemTopic = PsTableGroup.getDoubleTable(itemTopicTableId);
-		DoubleTable brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
-		DoubleTable itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
-		
-		countTables = new CountTables(dims, topicUser, decisionUser, itemTopic, brandTopic, itemBrand);
-		
-		latent = new Latent();
-		int numUser = countTables.dims.numUser;
-		int numUserPerWorker = numUser/numWorkers;
-		if (workerRank == 0) {
-			logger.info("Number of users per worker " + numUserPerWorker + ", burnIn " + burnIn + ", numIter " + 
-					numIter);
-		}
-		
-		userBegin = workerRank * numUserPerWorker;
-		userEnd = (workerRank == numWorkers - 1)? numUser : (userBegin + numUserPerWorker);
-		
-		// Init the partition of tables for [userBegin, userEnd), excluding last user
-		// Since each thread initialize part of count tables, use barrier to
-        // ensure initialization completes.
-		long initBegin = System.currentTimeMillis();
-		initTables(countTables, latent, userBegin, userEnd);
-		PsTableGroup.globalBarrier();
-		long initTimeElapsed = System.currentTimeMillis() - initBegin;
-		if (workerRank == 0) {
-			logger.info("Initialization done after " + initTimeElapsed + "ms");
-		}
-		
-		// Burn-in period
-		long burnInBegin = System.currentTimeMillis();
-		for (int iter=0; iter < burnIn; iter++) {
-			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-				AdoptHistory history = ds.histories.get(uIndex);
-				ArrayList<String> adoptions = history.getItemIds();
-				updateLatents(adoptions, uIndex);
-				PsTableGroup.clock();
-			}
-		}
-		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
-		long burnInElapsed = System.currentTimeMillis() - burnInBegin;
-		if (workerRank == 0) {
-			logger.info("burnIn elapsed " + burnInElapsed + "ms");
-		}
-		
-		
-		// Actual training period
-//		long trainBegin = System.currentTimeMillis();
-		for (int iter=0; iter < numIter; iter++) {
-			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-				AdoptHistory instance = ds.histories.get(uIndex);
-				ArrayList<String> adoptions = instance.getItemIds();
-				updateLatents(adoptions, uIndex);
-				PsTableGroup.clock();
-			}
-			// Evaluate and record total log likelihood of users in [userBegin, userEnd) for each period 
-			if (iter % period == 0) {// iteration is a multiple of period
-				int snapshot = iter/period;
-				Distributions dists = toDistributions(countTables, priors);
-				double totalLL = 0f;
-				for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-					double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
-					assert !Double.isNaN(llOfUserData);
-					totalLL += llOfUserData;
-//					llRecorder.incLoss(snapshot, "userIndex", uIndex);
-					
-				}
-				llRecorder.incLoss(snapshot, "snapshot", snapshot);
-				llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
-			}
-		}
-		
-		PsTableGroup.globalBarrier();	// sync all resulting count tables
-		
-		Distributions distributions = toDistributions(countTables, priors);
-		
-		// Print all results.
-        if (workerRank == 0) {
-            logger.info("\n" + printExpDetails() + "\n" +
-                    llRecorder.printAllLoss());
-            if (!outputPrefix.equals("")) {
-                try {
-					outputCsvToDisk(distributions, outputPrefix);
-				} catch (Exception e) {
-					logger.error("Failed to output to disk");
-					e.printStackTrace();
-				}
-            }
-        }
-	}
+	
 	
 	public Distributions toDistributions(CountTables countTables, Priors priors) {
 		
@@ -413,10 +440,11 @@ public class BrandItemTopicWorker implements Runnable {
 
 	private double[][] toProbs(DoubleTable counts, int numRow, int numCol, double prior) {
 		double[][] probs = new double[numRow][numCol];
-		for (int i = 0; i < numCol; i++) {
-			double marginCount = counts.get(numRow, i);
-			for (int j = 0; j < numRow; j++) {
-				probs[j][i] = counts.get(j, i)/marginCount;
+		
+		for (int col = 0; col < numCol; col++) {
+			double marginCount = counts.get(numRow, col);
+			for (int row = 0; row < numRow; row++) {
+				probs[row][col] = counts.get(row, col)/marginCount;
 			}
 		}
 

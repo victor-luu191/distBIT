@@ -92,7 +92,7 @@ public class BrandItemTopicCore {
 				for (int topicIndex = 0; topicIndex < numTopic; topicIndex++) {
 					
 					// given the topic, compute the expected likelihood that the user adopted the item based on brand
-					double brandBasedLikelihood = brandBasedLikelihood(uIndex, itemIndex, topicIndex, dists, numBrand);
+					double brandBasedLikelihood = brandBasedLikelihood( itemIndex, topicIndex, dists, numBrand);
 					// add to total likelihood, weighted by the user's preference on the topic
 					sum += dists.topicUser[topicIndex][uIndex] * brandBasedLikelihood;	
 				}
@@ -103,7 +103,7 @@ public class BrandItemTopicCore {
 		return ll;
 	}
 	
-	private static double brandBasedLikelihood(int uIndex, int itemIndex, int topicIndex, Distributions dists, int numBrand) {
+	private static double brandBasedLikelihood( int itemIndex, int topicIndex, Distributions dists, int numBrand) {
 		double likelihood = 0f;
 		for (int bIndex = 0; bIndex < numBrand; bIndex++) {
 			likelihood += dists.brandTopic[bIndex][topicIndex] * dists.itemBrand[itemIndex][bIndex];
