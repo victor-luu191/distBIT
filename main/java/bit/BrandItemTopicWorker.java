@@ -150,13 +150,13 @@ public class BrandItemTopicWorker implements Runnable {
 		PsTableGroup.globalBarrier();
 
 		// print out to check if initialization has any bug e.g. negative counts
-		if (workerRank == 0) {
-			print(countTables.topicUser, dims.numTopic, "topicUser");
-			print(countTables.decisionUser, Dimensions.numDecision, "decisionUser");
-			print(countTables.itemTopic, dims.numItem, "itemTopic");
-			print(countTables.brandTopic, dims.numBrand, "brandTopic");
-			print(countTables.itemBrand, dims.numItem, "itemBrand");
-		}
+//		if (workerRank == 0) {
+//			print(countTables.topicUser, dims.numTopic, "topicUser");
+//			print(countTables.decisionUser, Dimensions.numDecision, "decisionUser");
+//			print(countTables.itemTopic, dims.numItem, "itemTopic");
+//			print(countTables.brandTopic, dims.numBrand, "brandTopic");
+//			print(countTables.itemBrand, dims.numItem, "itemBrand");
+//		}
 		
 		long initTimeElapsed = System.currentTimeMillis() - initBegin;
 		if (workerRank == 0) {
@@ -294,9 +294,7 @@ public class BrandItemTopicWorker implements Runnable {
 			
 			countTables.topicUser.inc(topicIndex, uIndex, 1);
 			
-			latent.topics.get(uIndex).add(topicIndex);	// init topic for adoption (u,i)
-			countTables.itemTopic.inc(itemIndex, topicIndex, 1);
-			countTables.itemTopic.inc(dims.numItem, topicIndex, 1);	// inc marginal count
+			latent.topics.get(uIndex).add(topicIndex);	// init latent topic for adoption (u,i)
 			
 			int decision = random.nextInt(Dimensions.numDecision);
 			latent.decisions.get(uIndex).add(decision);	// init decision for adoption (u,i)
@@ -305,6 +303,9 @@ public class BrandItemTopicWorker implements Runnable {
 				countTables.decisionUser.inc(0, uIndex, 1);
 				int brandIndex = -1;
 				latent.brands.get(uIndex).add(brandIndex);
+				
+				countTables.itemTopic.inc(itemIndex, topicIndex, 1);
+				countTables.itemTopic.inc(dims.numItem, topicIndex, 1);	// inc marginal count
 				
 			} else {
 				countTables.decisionUser.inc(1, uIndex, 1);

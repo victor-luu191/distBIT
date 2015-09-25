@@ -63,14 +63,14 @@ public class CountTables {
 		
 		if (cPair.getDecision() == 0) {// currently no brand is used
 			decisionUser.inc(0, userIndex,  -1);
-			decisionUser.inc(2, userIndex, -1);	// decrease marginal decision counts
+			decisionUser.inc(Dimensions.numDecision, userIndex, -1);	// decrease marginal decision counts
 			
 			itemTopic.inc(itemIndex, cTopic,  -1);
 			itemTopic.inc(dims.numItem, cTopic, -1);
 		} 
 		else {//currently brand is used
 			decisionUser.inc(1, userIndex,  -1);
-			decisionUser.inc(2, userIndex, -1);	// decrease marginal decision counts
+			decisionUser.inc(Dimensions.numDecision, userIndex, -1);	// decrease marginal decision counts
 			
 			int cBrandIndex = cPair.getBrandIndex();
 			brandTopic.inc(cBrandIndex, cTopic,  -1);
@@ -82,7 +82,6 @@ public class CountTables {
 	}
 	
 	public void incPairCount(Pair nPair, int userIndex, int itemIndex, int cTopic) {
-
 		
 		if (nPair.getDecision() == 0) {
 			decisionUser.inc(0, userIndex,  1);

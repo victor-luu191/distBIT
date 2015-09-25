@@ -74,7 +74,7 @@ public class BrandItemTopic extends PsApplication {
 	public void initialize() {
 		
 		long loadTimebegin = System.currentTimeMillis();
-		config.dataDir = "data/syn/16/";
+//		config.dataDir = "data/syn/1/";
 		DataSet ds = new DataSet();
 		// load data and record dimensions: numUser, numItem, numBrand
 		Dimensions dims = DataReader.loadData(config.dataDir, ds);	 
