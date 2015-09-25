@@ -13,7 +13,6 @@ import cc.mallet.util.Randoms;
 import defs.AdoptHistory;
 import defs.Adoption;
 import defs.Brand;
-import defs.CountTables;
 import defs.Dimensions;
 import defs.Distributions;
 import defs.Item;

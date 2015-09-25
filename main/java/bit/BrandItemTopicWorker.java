@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import defs.AdoptHistory;
 import defs.Adoption;
-import defs.CountTables;
 import defs.Dimensions;
 import defs.Distributions;
 import defs.Item;
