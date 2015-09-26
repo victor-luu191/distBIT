@@ -96,7 +96,15 @@ public class BrandItemTopicCore {
 					sum += dists.topicUser[topicIndex][uIndex] * brandBasedLikelihood;	
 				}
 				double secondTerm = dists.decisionUser[1][uIndex] * sum;
-				ll += adoptFreq[itemIndex] * Math.log(firstTerm + secondTerm);
+				if (firstTerm + secondTerm > 0) {
+					ll += adoptFreq[itemIndex] * Math.log(firstTerm + secondTerm);
+				} else {
+					System.out.println("prob of decision 0 of user " + uIndex + " is " + dists.decisionUser[0][uIndex]);
+					System.out.println("topicBasedLikelihood " + topicBasedLikelihood);
+					System.out.println("prob of decision 1 of user " + uIndex + " is " + dists.decisionUser[1][uIndex]);
+					System.out.println("brandBasedLikelihood weighted by topic preference " + sum);
+					System.exit(-1);
+				}
 			}
 		}
 		return ll;

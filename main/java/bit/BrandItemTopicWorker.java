@@ -83,7 +83,7 @@ public class BrandItemTopicWorker implements Runnable {
 		public Pair[] allPairs = new Pair[0];
 		public int numTopic = 2;
 		public Dimensions dims = new Dimensions();
-		int period = 10;
+		int period = 100;
 	}
 	
 	public BrandItemTopicWorker(Config config, int workerRank) {
@@ -151,11 +151,7 @@ public class BrandItemTopicWorker implements Runnable {
 
 		// print out to check if initialization has any bug e.g. negative counts
 //		if (workerRank == 0) {
-//			print(countTables.topicUser, dims.numTopic, "topicUser");
-//			print(countTables.decisionUser, Dimensions.numDecision, "decisionUser");
-//			print(countTables.itemTopic, dims.numItem, "itemTopic");
-//			print(countTables.brandTopic, dims.numBrand, "brandTopic");
-//			print(countTables.itemBrand, dims.numItem, "itemBrand");
+//			printCounts();
 //		}
 		
 		long initTimeElapsed = System.currentTimeMillis() - initBegin;
@@ -193,25 +189,23 @@ public class BrandItemTopicWorker implements Runnable {
 			// for each period, Evaluate and record total log likelihood of users in [userBegin, userEnd)  
 			if (iter % period == 0) {// iteration is a multiple of period
 				int snapshot = iter/period;
-				PsTableGroup.globalBarrier();	// sync counts at this period
-				System.out.println("snapshot " + snapshot);
-				print(countTables.topicUser, dims.numTopic + 1, "topicUser");
-				print(countTables.decisionUser, Dimensions.numDecision + 1, "decisionUser");
-				print(countTables.itemTopic, dims.numItem + 1, "itemTopic");
-				print(countTables.brandTopic, dims.numBrand + 1, "brandTopic");
-				print(countTables.itemBrand, dims.numItem + 1, "itemBrand");
 				
-//				Distributions dists = toDistributions(countTables, priors);
-//				double totalLL = 0f;
-//				for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-//					double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
-//					assert !Double.isNaN(llOfUserData);
-//					totalLL += llOfUserData;
-////					llRecorder.incLoss(snapshot, "userIndex", uIndex);
-//					
-//				}
-//				llRecorder.incLoss(snapshot, "snapshot", snapshot);
-//				llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
+				PsTableGroup.globalBarrier();	// sync counts at this period
+
+				//				System.out.println("Snapshot: " + snapshot);
+//				printCounts();
+				
+				Distributions dists = toDistributions(countTables, priors);
+				double totalLL = 0f;
+				for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+					double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
+					assert !Double.isNaN(llOfUserData);
+					totalLL += llOfUserData;
+//					llRecorder.incLoss(snapshot, "userIndex", uIndex);
+					
+				}
+				llRecorder.incLoss(snapshot, "snapshot", snapshot);
+				llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
 			}
 		}
 		
@@ -233,9 +227,17 @@ public class BrandItemTopicWorker implements Runnable {
         }
 	}
 
+	private void printCounts() {
+		print(countTables.topicUser, dims.numTopic + 1, "topicUser");
+		print(countTables.decisionUser, Dimensions.numDecision + 1, "decisionUser");
+		print(countTables.itemTopic, dims.numItem + 1, "itemTopic");
+		print(countTables.brandTopic, dims.numBrand + 1, "brandTopic");
+		print(countTables.itemBrand, dims.numItem + 1, "itemBrand");
+	}
+
 	private void print(DoubleTable table, int numRow, String tableName) {
 		
-		System.out.println(tableName);
+		System.out.println("\t" + tableName);
 		for (int row = 0; row < numRow; row++) {
 			DoubleColumnIterator iter = table.get(row).iterator();
 			String line = "";
@@ -256,7 +258,7 @@ public class BrandItemTopicWorker implements Runnable {
 			BrandItemTopicCore.updateTopic(adopt, countTables, latent, priors);
 			BrandItemTopicCore.updatePair(adopt, countTables, latent, priors, allPairs, ds);
 			
-			PsTableGroup.globalBarrier();	// sync changes immediately to see effect of each pair update
+//			PsTableGroup.globalBarrier();	// sync changes immediately st effect of each pair update is observable
 //			print(countTables.itemTopic, dims.numItem + 1, "itemTopic");
 //			print(countTables.itemBrand, dims.numItem + 1, "itemBrand");
 			
@@ -457,7 +459,13 @@ public class BrandItemTopicWorker implements Runnable {
 		for (int col = 0; col < numCol; col++) {
 			double marginCount = counts.get(numRow, col);
 			for (int row = 0; row < numRow; row++) {
-				probs[row][col] = counts.get(row, col)/marginCount;
+				if (counts.get(row, col) == 0 & marginCount == 0) {
+					
+//					System.out.println("Nan due to 0 divided 0");
+//					System.exit(-1);
+				} else {
+					probs[row][col] = counts.get(row, col)/marginCount;
+				}
 			}
 		}
 
