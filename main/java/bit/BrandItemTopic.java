@@ -100,7 +100,6 @@ public class BrandItemTopic extends PsApplication {
 		
 		// Configure loss table
 		LikelihoodRecorder.createLossTable();
-		config.outputPrefix = "";
 	}
 
 	@Override

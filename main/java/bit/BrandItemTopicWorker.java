@@ -117,8 +117,8 @@ public class BrandItemTopicWorker implements Runnable {
         this.workerRank = workerRank;
         
         llRecorder.registerField("snapshot");
-//        llRecorder.registerField("userIndex");
         llRecorder.registerField("logLikelihood");
+        this.outputPrefix = config.outputPrefix;
 	}
 
 	public void run() {
@@ -149,11 +149,6 @@ public class BrandItemTopicWorker implements Runnable {
 		initTables(countTables, latent, userBegin, userEnd);
 		PsTableGroup.globalBarrier();
 
-		// print out to check if initialization has any bug e.g. negative counts
-//		if (workerRank == 0) {
-//			printCounts();
-//		}
-		
 		long initTimeElapsed = System.currentTimeMillis() - initBegin;
 		if (workerRank == 0) {
 			logger.info("Initialization done after " + initTimeElapsed + "ms");
@@ -170,6 +165,11 @@ public class BrandItemTopicWorker implements Runnable {
 				
 			}
 			// should we print out likelihood here?
+			if (workerRank == 0) {
+				if (iter % period == 0) {// iteration is a multiple of period
+					printLL(iter);
+				}
+			}
 		}
 		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
 		long burnInElapsed = System.currentTimeMillis() - burnInBegin;
@@ -189,8 +189,10 @@ public class BrandItemTopicWorker implements Runnable {
 			}
 //			should we print out likelihood here?
 			// for each period, Evaluate and record total log likelihood of users in [userBegin, userEnd)  
-			if (iter % period == 0) {// iteration is a multiple of period
-				printLL(iter);
+			if (workerRank == 0) {
+				if (iter % period == 0) {// iteration is a multiple of period
+					printLL(iter);
+				}
 			}
 			
 		}
@@ -202,14 +204,14 @@ public class BrandItemTopicWorker implements Runnable {
             logger.info("\n" + printExpDetails() + "\n" +
                     llRecorder.printAllLoss());
             
-//            if (!outputPrefix.equals("")) {
-//                try {
-//					outputCsvToDisk(distributions, outputPrefix);
-//				} catch (Exception e) {
-//					logger.error("Failed to output to disk");
-//					e.printStackTrace();
-//				}
-//            }
+            if (!outputPrefix.equals("")) {
+                try {
+					outputCsvToDisk(distributions, outputPrefix);
+				} catch (Exception e) {
+					logger.error("Failed to output to disk");
+					e.printStackTrace();
+				}
+            }
         }
 	}
 
@@ -217,7 +219,7 @@ public class BrandItemTopicWorker implements Runnable {
 		
 		int snapshot = iter/period;
 		
-		PsTableGroup.globalBarrier();	// sync counts at this period
+//		PsTableGroup.globalBarrier();	// sync (update) counts at this period
 
 		Distributions dists = toDistributions(countTables, priors);
 		double totalLL = 0f;
@@ -464,13 +466,7 @@ public class BrandItemTopicWorker implements Runnable {
 		for (int col = 0; col < numCol; col++) {
 			double marginCount = counts.get(numRow, col);
 			for (int row = 0; row < numRow; row++) {
-				if (counts.get(row, col) == 0 & marginCount == 0) {
-					
-//					System.out.println("Nan due to 0 divided 0");
-//					System.exit(-1);
-				} else {
-					probs[row][col] = counts.get(row, col)/marginCount;
-				}
+				probs[row][col] = (counts.get(row, col) + prior)/(marginCount + numRow * prior);
 			}
 		}
 
