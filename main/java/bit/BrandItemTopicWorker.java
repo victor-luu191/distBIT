@@ -171,6 +171,7 @@ public class BrandItemTopicWorker implements Runnable {
 				ArrayList<String> adoptions = history.getItemIds();
 				updateLatents(adoptions, uIndex);
 				PsTableGroup.clock();
+
 			}
 		}
 		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
@@ -189,39 +190,46 @@ public class BrandItemTopicWorker implements Runnable {
 				updateLatents(adoptions, uIndex);
 				PsTableGroup.clock();
 			}
-			// Evaluate and record total log likelihood of users in [userBegin, userEnd) for each period 
+			// for each period, Evaluate and record total log likelihood of users in [userBegin, userEnd)  
 			if (iter % period == 0) {// iteration is a multiple of period
 				int snapshot = iter/period;
-				Distributions dists = toDistributions(countTables, priors);
-				double totalLL = 0f;
-				for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-					double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
-					assert !Double.isNaN(llOfUserData);
-					totalLL += llOfUserData;
-//					llRecorder.incLoss(snapshot, "userIndex", uIndex);
-					
-				}
-				llRecorder.incLoss(snapshot, "snapshot", snapshot);
-				llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
+				PsTableGroup.globalBarrier();	// sync counts at this period
+				System.out.println("snapshot " + snapshot);
+				print(countTables.topicUser, dims.numTopic + 1, "topicUser");
+				print(countTables.decisionUser, Dimensions.numDecision + 1, "decisionUser");
+				print(countTables.itemTopic, dims.numItem + 1, "itemTopic");
+				print(countTables.brandTopic, dims.numBrand + 1, "brandTopic");
+				print(countTables.itemBrand, dims.numItem + 1, "itemBrand");
+				
+//				Distributions dists = toDistributions(countTables, priors);
+//				double totalLL = 0f;
+//				for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+//					double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
+//					assert !Double.isNaN(llOfUserData);
+//					totalLL += llOfUserData;
+////					llRecorder.incLoss(snapshot, "userIndex", uIndex);
+//					
+//				}
+//				llRecorder.incLoss(snapshot, "snapshot", snapshot);
+//				llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
 			}
 		}
 		
 		PsTableGroup.globalBarrier();	// sync all resulting count tables
-		
 		Distributions distributions = toDistributions(countTables, priors);
-		
 		// Print all results.
         if (workerRank == 0) {
             logger.info("\n" + printExpDetails() + "\n" +
                     llRecorder.printAllLoss());
-            if (!outputPrefix.equals("")) {
-                try {
-					outputCsvToDisk(distributions, outputPrefix);
-				} catch (Exception e) {
-					logger.error("Failed to output to disk");
-					e.printStackTrace();
-				}
-            }
+            
+//            if (!outputPrefix.equals("")) {
+//                try {
+//					outputCsvToDisk(distributions, outputPrefix);
+//				} catch (Exception e) {
+//					logger.error("Failed to output to disk");
+//					e.printStackTrace();
+//				}
+//            }
         }
 	}
 
@@ -240,13 +248,18 @@ public class BrandItemTopicWorker implements Runnable {
 	}
 
 	private void updateLatents(ArrayList<String> adoptions, int uIndex) {
+		
 		for (int adoptIndex = 0; adoptIndex < adoptions.size(); adoptIndex++) {
-			
 			String itemId = adoptions.get(adoptIndex);
 			int itemIndex = ds.itemDict.lookupIndex(new Item(itemId));
 			Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
 			BrandItemTopicCore.updateTopic(adopt, countTables, latent, priors);
 			BrandItemTopicCore.updatePair(adopt, countTables, latent, priors, allPairs, ds);
+			
+			PsTableGroup.globalBarrier();	// sync changes immediately to see effect of each pair update
+//			print(countTables.itemTopic, dims.numItem + 1, "itemTopic");
+//			print(countTables.itemBrand, dims.numItem + 1, "itemBrand");
+			
 		}
 	}
 	
