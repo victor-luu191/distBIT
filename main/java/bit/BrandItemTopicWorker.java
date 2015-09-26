@@ -83,7 +83,7 @@ public class BrandItemTopicWorker implements Runnable {
 		public Pair[] allPairs = new Pair[0];
 		public int numTopic = 2;
 		public Dimensions dims = new Dimensions();
-		int period = 100;
+		int period = 10;
 	}
 	
 	public BrandItemTopicWorker(Config config, int workerRank) {
@@ -167,8 +167,9 @@ public class BrandItemTopicWorker implements Runnable {
 				ArrayList<String> adoptions = history.getItemIds();
 				updateLatents(adoptions, uIndex);
 				PsTableGroup.clock();
-
+				
 			}
+			// should we print out likelihood here?
 		}
 		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
 		long burnInElapsed = System.currentTimeMillis() - burnInBegin;
@@ -186,27 +187,12 @@ public class BrandItemTopicWorker implements Runnable {
 				updateLatents(adoptions, uIndex);
 				PsTableGroup.clock();
 			}
+//			should we print out likelihood here?
 			// for each period, Evaluate and record total log likelihood of users in [userBegin, userEnd)  
 			if (iter % period == 0) {// iteration is a multiple of period
-				int snapshot = iter/period;
-				
-				PsTableGroup.globalBarrier();	// sync counts at this period
-
-				//				System.out.println("Snapshot: " + snapshot);
-//				printCounts();
-				
-				Distributions dists = toDistributions(countTables, priors);
-				double totalLL = 0f;
-				for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-					double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
-					assert !Double.isNaN(llOfUserData);
-					totalLL += llOfUserData;
-//					llRecorder.incLoss(snapshot, "userIndex", uIndex);
-					
-				}
-				llRecorder.incLoss(snapshot, "snapshot", snapshot);
-				llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
+				printLL(iter);
 			}
+			
 		}
 		
 		PsTableGroup.globalBarrier();	// sync all resulting count tables
@@ -225,6 +211,25 @@ public class BrandItemTopicWorker implements Runnable {
 //				}
 //            }
         }
+	}
+
+	private void printLL(int iter) {
+		
+		int snapshot = iter/period;
+		
+		PsTableGroup.globalBarrier();	// sync counts at this period
+
+		Distributions dists = toDistributions(countTables, priors);
+		double totalLL = 0f;
+		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+			double llOfUserData = BrandItemTopicCore.evalLikelihood(ds, uIndex, dists);
+			assert !Double.isNaN(llOfUserData);
+			totalLL += llOfUserData;
+//				llRecorder.incLoss(snapshot, "userIndex", uIndex);
+			
+		}
+		llRecorder.incLoss(snapshot, "snapshot", snapshot);
+		llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
 	}
 
 	private void printCounts() {
