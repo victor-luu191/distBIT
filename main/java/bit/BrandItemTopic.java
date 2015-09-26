@@ -44,7 +44,7 @@ public class BrandItemTopic extends PsApplication {
 		
 		
 		bitConfig.outputPrefix = config.outputPrefix;
-		
+		bitConfig.numRestart = config.numRestart;
 	}
 
 	public static void main(String[] args) {

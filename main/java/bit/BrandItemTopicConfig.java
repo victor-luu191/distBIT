@@ -53,6 +53,9 @@ public class BrandItemTopicConfig extends PsConfig {
 	
 	@Option(name = "-period", required = false, usage = "Length of each period. Default = 10")
 	public int period = 10;
+
+	@Option(name = "-numRestart", required = false, usage = "Number of restarts for training BIT. Default = 10")
+	public int numRestart = 10;
 	
 //	@Option(name = "-seed", required = false, usage = "Seed for the sampler. Default = 123")
 //	public int seed = 123;
