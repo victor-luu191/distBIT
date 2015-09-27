@@ -24,6 +24,9 @@ public class BrandItemTopicConfig extends PsConfig {
 	@Option(name = "-numIter", required = false, usage = "Number of iterations for actual training period. Default = 500")
 	public int numIter = 500;
 	
+	@Option(name = "-period", required = false, usage = "Length of each period. Default = 10")
+	public int period = 25;
+	
 	@Option(name = "-numTopic", required = false, usage = "Number of topics for BIT. Default = 2")
 	public int numTopic = 2;
 	
@@ -51,9 +54,6 @@ public class BrandItemTopicConfig extends PsConfig {
 
 	public Dimensions dims;
 	
-	@Option(name = "-period", required = false, usage = "Length of each period. Default = 10")
-	public int period = 10;
-
 	@Option(name = "-numRestart", required = false, usage = "Number of restarts for training BIT. Default = 10")
 	public int numRestart = 10;
 	

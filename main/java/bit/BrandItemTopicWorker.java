@@ -50,7 +50,7 @@ public class BrandItemTopicWorker implements Runnable {
 	private int workerRank;
 	private int userBegin; 
 	private int userEnd;
-	private Latent latent;
+	private Latent latents;
 	private Pair[] allPairs;
 	private Dimensions dims;
 
@@ -126,13 +126,6 @@ public class BrandItemTopicWorker implements Runnable {
 	}
 
 	public void run() {
-		 
-		DoubleTable topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
-		DoubleTable decisionUser = PsTableGroup.getDoubleTable(decisionUserTableId);
-		DoubleTable itemTopic = PsTableGroup.getDoubleTable(itemTopicTableId);
-		DoubleTable brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
-		DoubleTable itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
-		
 		
 		int numUser = dims.numUser;
 		int numUserPerWorker = numUser/numWorkers;
@@ -144,65 +137,97 @@ public class BrandItemTopicWorker implements Runnable {
 		userBegin = workerRank * numUserPerWorker;
 		userEnd = (workerRank == numWorkers - 1)? numUser : (userBegin + numUserPerWorker);
 		
+		System.out.println("Restart " + 0);
+		countTables = retrieveCountTables();
+		latents = new Latent();
+		long initBegin = System.currentTimeMillis();
+		initTables(countTables, latents, userBegin, userEnd);
+		PsTableGroup.globalBarrier();	// Ensure complete initialization as each thread initialize a part of count tables.
+		long initTimeElapsed = System.currentTimeMillis() - initBegin;
+		if (workerRank == 0) {
+			logger.info("Initialization done after " + initTimeElapsed + "ms");
+		}
+		double totalLL = runSampler();
+		saveLearnedDists(0);
+		
 		double max = Double.NEGATIVE_INFINITY;
 		for (int r = 0; r < numRestart; r++) {
-			System.out.println("Restart " + r);
 			
-			countTables = new CountTables(dims, topicUser, decisionUser, itemTopic, brandTopic, itemBrand);
-			latent = new Latent();
-			// Init the partition of tables for [userBegin, userEnd), excluding last user
-			// Since each thread initialize part of count tables, use barrier to
-	        // ensure initialization completes.
-			long initBegin = System.currentTimeMillis();
-			initTables(countTables, latent, userBegin, userEnd);
-			PsTableGroup.globalBarrier();
-			long initTimeElapsed = System.currentTimeMillis() - initBegin;
+			System.out.println("Restart " + r);
+			resetCounts(userBegin, userEnd);
+			resetLatents(userBegin, userEnd);
+			
+			initBegin = System.currentTimeMillis();
+			initTables(countTables, latents, userBegin, userEnd);
+			PsTableGroup.globalBarrier();	// Ensure complete initialization as each thread initialize a part of count tables.
+			initTimeElapsed = System.currentTimeMillis() - initBegin;
 			if (workerRank == 0) {
 				logger.info("Initialization done after " + initTimeElapsed + "ms");
 			}
-			
-			double totalLL = runSampler();
-			
-			PsTableGroup.globalBarrier();	// sync all resulting count tables
-			Distributions distributions = toDistributions(countTables, priors);
-			// Print all results.
-	        if (workerRank == 0) {
-	            logger.info("\n" + printExpDetails() + "\n" +
-	                    llRecorder.printAllLoss());
-	            
-	            outputPrefix += ("_restart" + r);
-	            try {
-					outputCsvToDisk(distributions, outputPrefix);
-				} catch (Exception e) {
-					logger.error("Failed to output to disk");
-					e.printStackTrace();
-				}
-	        }
+			totalLL = runSampler();
+			saveLearnedDists(r);
 			
 //			if (totalLL > max) {
 //				max = totalLL;
-//				
-//				PsTableGroup.globalBarrier();	// sync all resulting count tables
-//				Distributions distributions = toDistributions(countTables, priors);
-//				// Print all results.
-//		        if (workerRank == 0) {
-//		            logger.info("\n" + printExpDetails() + "\n" +
-//		                    llRecorder.printAllLoss());
-//		            
-//		            outputPrefix += ("_restart" + r);
-//		            try {
-//						outputCsvToDisk(distributions, outputPrefix);
-//					} catch (Exception e) {
-//						logger.error("Failed to output to disk");
-//						e.printStackTrace();
-//					}
-//		        }
+//				saveLearnedDists(r);
 //			}
 			
 			
 		}
-		
-		
+	}
+
+	private void resetCounts(int userBegin, int userEnd) {
+		// TODO Auto-generated method stub
+		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+			resetCountsOfUser(uIndex);
+		}
+	}
+
+	private void resetCountsOfUser(int uIndex) {
+		// TODO Auto-generated method stub
+		Random random = new Random();
+		Dimensions dims = countTables.dims;
+		AdoptHistory adoptHistory = ds.histories.get(uIndex);
+		ArrayList<String> adoptions = adoptHistory.getItemIds();
+	}
+
+	private void resetLatents(int userBegin, int userEnd) {
+		// TODO Auto-generated method stub
+		latents = new Latent();
+		// For each user, create his list of latents for adoptions
+		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+			latents.topics.put(uIndex, new ArrayList<Integer>());
+			latents.brands.put(uIndex, new ArrayList<Integer>());
+			latents.decisions.put(uIndex, new ArrayList<Integer>());
+		}
+	}
+
+	private CountTables retrieveCountTables() {
+		DoubleTable topicUser = PsTableGroup.getDoubleTable(topicUserTableId);
+		DoubleTable decisionUser = PsTableGroup.getDoubleTable(decisionUserTableId);
+		DoubleTable itemTopic = PsTableGroup.getDoubleTable(itemTopicTableId);
+		DoubleTable brandTopic = PsTableGroup.getDoubleTable(brandTopicTableId);
+		DoubleTable itemBrand = PsTableGroup.getDoubleTable(itemBrandTableId);
+		CountTables countTables = new CountTables(dims, topicUser, decisionUser, itemTopic, brandTopic, itemBrand);
+		return countTables;
+	}
+
+	private void saveLearnedDists(int r) {
+		PsTableGroup.globalBarrier();	// sync all resulting count tables
+		Distributions distributions = toDistributions(countTables, priors);
+		// Print all results.
+		if (workerRank == 0) {
+		    logger.info("\n" + printExpDetails() + "\n" +
+		            llRecorder.printAllLoss());
+		    
+		    String prefix = outputPrefix + ("_restart" + r);
+		    try {
+				outputCsvToDisk(distributions, prefix);
+			} catch (Exception e) {
+				logger.error("Failed to output to disk");
+				e.printStackTrace();
+			}
+		}
 	}
 
 	private double runSampler() {
@@ -216,7 +241,7 @@ public class BrandItemTopicWorker implements Runnable {
 				PsTableGroup.clock();
 				
 			}
-			//Print out likelihood to see improvements over uniform distributions
+			// Print out likelihood to see improvements over uniform distributions
 			if (workerRank == 0) {
 				if (iter % period == 0) {// iteration is a multiple of period
 					printLL(iter);
@@ -230,7 +255,7 @@ public class BrandItemTopicWorker implements Runnable {
 		}
 		
 		
-		// Actual training period
+		// Training period
 //		long trainBegin = System.currentTimeMillis();
 		double totalLL = 0;
 		for (int iter=0; iter < numIter; iter++) {
@@ -295,8 +320,8 @@ public class BrandItemTopicWorker implements Runnable {
 			String itemId = adoptions.get(adoptIndex);
 			int itemIndex = ds.itemDict.lookupIndex(new Item(itemId));
 			Adoption adopt = new Adoption(adoptIndex, uIndex, itemIndex);
-			BrandItemTopicCore.updateTopic(adopt, countTables, latent, priors);
-			BrandItemTopicCore.updatePair(adopt, countTables, latent, priors, allPairs, ds);
+			BrandItemTopicCore.updateTopic(adopt, countTables, latents, priors);
+			BrandItemTopicCore.updatePair(adopt, countTables, latents, priors, allPairs, ds);
 			
 //			PsTableGroup.globalBarrier();	// sync changes immediately st effect of each pair update is observable
 //			print(countTables.itemTopic, dims.numItem + 1, "itemTopic");
@@ -333,7 +358,7 @@ public class BrandItemTopicWorker implements Runnable {
 		Dimensions dims = countTables.dims;
 		AdoptHistory adoptHistory = ds.histories.get(uIndex);
 		ArrayList<String> adoptions = adoptHistory.getItemIds();
-		// create lists of latents for adoptions
+		// Create the user's list of latents for adoptions
 		latent.topics.put(uIndex, new ArrayList<Integer>());
 		latent.brands.put(uIndex, new ArrayList<Integer>());
 		latent.decisions.put(uIndex, new ArrayList<Integer>());

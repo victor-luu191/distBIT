@@ -87,19 +87,23 @@ public class BrandItemTopic extends PsApplication {
 				+ "The dataset has " + dims.numUser + " users, " + dims.numItem + " items and " + 
 				dims.numBrand + " brands. Loading finished after " + loadTimeElapsed + "ms.");
 		
-		// Configure count tables (containers of counts) with proper dimensions
-		int staleness = 0;
-		PsTableGroup.createDenseDoubleTable(topicUserTableId, staleness, dims.numUser);
-		PsTableGroup.createDenseDoubleTable(decisionUserTableId, staleness, dims.numUser);
-		PsTableGroup.createDenseDoubleTable(itemTopicTableId, staleness, dims.numTopic);
-		PsTableGroup.createDenseDoubleTable(brandTopicTableId, staleness, dims.numTopic);
-		PsTableGroup.createDenseDoubleTable(itemBrandTableId, staleness, dims.numBrand);
+		// Create count tables (containers of counts) with proper dimensions
+		createCountTables(dims);
 		
 
 		bitConfig.allPairs = buildPairs(dims.numBrand);
 		
 		// Configure loss table
 		LikelihoodRecorder.createLossTable();
+	}
+
+	private void createCountTables(Dimensions dims) {
+		int staleness = 0;
+		PsTableGroup.createDenseDoubleTable(topicUserTableId, staleness, dims.numUser);
+		PsTableGroup.createDenseDoubleTable(decisionUserTableId, staleness, dims.numUser);
+		PsTableGroup.createDenseDoubleTable(itemTopicTableId, staleness, dims.numTopic);
+		PsTableGroup.createDenseDoubleTable(brandTopicTableId, staleness, dims.numTopic);
+		PsTableGroup.createDenseDoubleTable(itemBrandTableId, staleness, dims.numBrand);
 	}
 
 	@Override
