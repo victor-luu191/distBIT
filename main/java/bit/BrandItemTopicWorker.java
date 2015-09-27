@@ -151,18 +151,20 @@ public class BrandItemTopicWorker implements Runnable {
 		saveLearnedDists(0);
 		
 		double max = Double.NEGATIVE_INFINITY;
-		for (int r = 0; r < numRestart; r++) {
+		for (int r = 1; r < numRestart; r++) {
 			
 			System.out.println("Restart " + r);
-			resetCounts(userBegin, userEnd);
-			resetLatents(userBegin, userEnd);
+			// Empty latent lists (to put in new latents later) and reset counts to 0
+			emptyLatents(userBegin, userEnd);
+			toZeroCounts(userBegin, userEnd);
+			PsTableGroup.globalBarrier();
 			
-			initBegin = System.currentTimeMillis();
-			initTables(countTables, latents, userBegin, userEnd);
-			PsTableGroup.globalBarrier();	// Ensure complete initialization as each thread initialize a part of count tables.
+			resetLatentsAndCounts(userBegin, userEnd);
+			PsTableGroup.globalBarrier();
+				
 			initTimeElapsed = System.currentTimeMillis() - initBegin;
 			if (workerRank == 0) {
-				logger.info("Initialization done after " + initTimeElapsed + "ms");
+				logger.info("Reset done after " + initTimeElapsed + "ms");
 			}
 			totalLL = runSampler();
 			saveLearnedDists(r);
@@ -176,23 +178,79 @@ public class BrandItemTopicWorker implements Runnable {
 		}
 	}
 
-	private void resetCounts(int userBegin, int userEnd) {
-		// TODO Auto-generated method stub
+	private void toZeroCounts(int userBegin, int userEnd) {
+		
 		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
-			resetCountsOfUser(uIndex);
+			// set to 0 all topic counts of the user, including marginal counts
+			toZeros(dims.numTopic + 1, uIndex, countTables.topicUser);
+			// set to 0 all decision counts of the user, including marginal counts
+			toZeros(Dimensions.numDecision + 1, uIndex, countTables.decisionUser);
+		}
+		
+		for (int tIndex = 0; tIndex < dims.numTopic; tIndex++) {
+			toZeros(dims.numItem + 1, tIndex, countTables.itemTopic);
+			toZeros(dims.numBrand + 1, tIndex, countTables.brandTopic);
+		}
+		
+		for (int bIndex = 0; bIndex < dims.numBrand; bIndex++) {
+			toZeros(dims.numItem + 1, bIndex, countTables.itemBrand);
 		}
 	}
 
-	private void resetCountsOfUser(int uIndex) {
+	private void toZeros(int numRow, int col, DoubleTable table) {
+		for (int row = 0; row < numRow; row++) {
+			double cValue = table.get(row, col);
+			table.inc(row, col, -cValue);
+		}
+	}
+	
+	private void resetLatentsAndCounts(int userBegin, int userEnd) {
 		// TODO Auto-generated method stub
+		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+			resetLatentsAndCountsOfUser(uIndex);
+		}
+	}
+
+	private void resetLatentsAndCountsOfUser(int uIndex) {
+		
 		Random random = new Random();
 		Dimensions dims = countTables.dims;
 		AdoptHistory adoptHistory = ds.histories.get(uIndex);
 		ArrayList<String> adoptions = adoptHistory.getItemIds();
+		
+		for (int i=0; i < adoptions.size(); i++) {
+			int itemIndex = ds.itemDict.lookupIndex(new Item(adoptions.get(i)));
+			int topicIndex = random.nextInt(dims.numTopic);
+			latents.topics.get(uIndex).add(topicIndex);
+			countTables.topicUser.inc(topicIndex, uIndex, 1);
+			
+			int decision = random.nextInt(Dimensions.numDecision);
+			latents.decisions.get(uIndex).add(decision);
+			
+			if (decision == 0) {// for this adoption, no brand is used
+				countTables.decisionUser.inc(0, uIndex, 1);
+				int brandIndex = -1;
+				latents.brands.get(uIndex).add(brandIndex);
+				
+				countTables.itemTopic.inc(itemIndex, topicIndex, 1);
+				countTables.itemTopic.inc(dims.numItem, topicIndex, 1);	// inc marginal count
+				
+			} else {
+				countTables.decisionUser.inc(1, uIndex, 1);
+				int brandIndex = random.nextInt(dims.numBrand);
+				latents.brands.get(uIndex).add(brandIndex);
+				
+				countTables.brandTopic.inc(brandIndex, topicIndex, 1);
+				countTables.brandTopic.inc(dims.numBrand, topicIndex, 1);	// inc marginal count
+				
+				countTables.itemBrand.inc(itemIndex, brandIndex, 1);
+				countTables.itemBrand.inc(dims.numItem, brandIndex, 1); // inc marginal count
+			}
+			
+		}
 	}
 
-	private void resetLatents(int userBegin, int userEnd) {
-		// TODO Auto-generated method stub
+	private void emptyLatents(int userBegin, int userEnd) {
 		latents = new Latent();
 		// For each user, create his list of latents for adoptions
 		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
@@ -350,18 +408,18 @@ public class BrandItemTopicWorker implements Runnable {
 	 * put the initial counts into count tables
 	 * @param uIndex
 	 * @param countTables
-	 * @param latent 
+	 * @param latents 
 	 */
-	private void initValues(CountTables countTables, Latent latent, int uIndex) {
+	private void initValues(CountTables countTables, Latent latents, int uIndex) {
 		
 		Random random = new Random();
 		Dimensions dims = countTables.dims;
 		AdoptHistory adoptHistory = ds.histories.get(uIndex);
 		ArrayList<String> adoptions = adoptHistory.getItemIds();
 		// Create the user's list of latents for adoptions
-		latent.topics.put(uIndex, new ArrayList<Integer>());
-		latent.brands.put(uIndex, new ArrayList<Integer>());
-		latent.decisions.put(uIndex, new ArrayList<Integer>());
+		latents.topics.put(uIndex, new ArrayList<Integer>());
+		latents.brands.put(uIndex, new ArrayList<Integer>());
+		latents.decisions.put(uIndex, new ArrayList<Integer>());
 		
 		// Add margin counts to tables topicUser and decisionUser 
 		// both equal to number of adopts of the user
@@ -371,18 +429,16 @@ public class BrandItemTopicWorker implements Runnable {
 		for (int i=0; i < adoptions.size(); i++) {
 			int itemIndex = ds.itemDict.lookupIndex(new Item(adoptions.get(i)));
 			int topicIndex = random.nextInt(dims.numTopic);
-			
+			latents.topics.get(uIndex).add(topicIndex);	// init latent topic for adoption (u,i)
 			countTables.topicUser.inc(topicIndex, uIndex, 1);
 			
-			latent.topics.get(uIndex).add(topicIndex);	// init latent topic for adoption (u,i)
-			
 			int decision = random.nextInt(Dimensions.numDecision);
-			latent.decisions.get(uIndex).add(decision);	// init decision for adoption (u,i)
+			latents.decisions.get(uIndex).add(decision);	// init decision for adoption (u,i)
 			
 			if (decision == 0) {// for this adoption, no brand is used
 				countTables.decisionUser.inc(0, uIndex, 1);
 				int brandIndex = -1;
-				latent.brands.get(uIndex).add(brandIndex);
+				latents.brands.get(uIndex).add(brandIndex);
 				
 				countTables.itemTopic.inc(itemIndex, topicIndex, 1);
 				countTables.itemTopic.inc(dims.numItem, topicIndex, 1);	// inc marginal count
@@ -390,7 +446,7 @@ public class BrandItemTopicWorker implements Runnable {
 			} else {
 				countTables.decisionUser.inc(1, uIndex, 1);
 				int brandIndex = random.nextInt(dims.numBrand);
-				latent.brands.get(uIndex).add(brandIndex);
+				latents.brands.get(uIndex).add(brandIndex);
 				
 				countTables.brandTopic.inc(brandIndex, topicIndex, 1);
 				countTables.brandTopic.inc(dims.numBrand, topicIndex, 1);	// inc marginal count
