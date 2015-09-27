@@ -172,10 +172,6 @@ public class BrandItemTopicWorker implements Runnable {
 				printCounts();
 			}
 			
-			initTimeElapsed = System.currentTimeMillis() - initBegin;
-			if (workerRank == 0) {
-				logger.info("Reset done after " + initTimeElapsed + "ms");
-			}
 			totalLL = runSampler();
 			saveLearnedDists(r);
 			
@@ -215,6 +211,7 @@ public class BrandItemTopicWorker implements Runnable {
 	}
 	
 	private void resetLatentsAndCounts(int userBegin, int userEnd) {
+		System.out.println("Reseting latents and counts of user in [" + userBegin + ", " + userEnd + ")");
 		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
 			resetLatentsAndCountsOfUser(uIndex);
 		}
@@ -310,9 +307,10 @@ public class BrandItemTopicWorker implements Runnable {
 				AdoptHistory history = ds.histories.get(uIndex);
 				ArrayList<String> adoptions = history.getItemIds();
 				updateLatents(adoptions, uIndex);
-				PsTableGroup.clock();
-				
 			}
+			
+			PsTableGroup.clock();
+			
 			// Print out likelihood to see improvements over uniform distributions
 			if (workerRank == 0) {
 				if (iter % period == 0) {// iteration is a multiple of period
@@ -335,8 +333,9 @@ public class BrandItemTopicWorker implements Runnable {
 				AdoptHistory instance = ds.histories.get(uIndex);
 				ArrayList<String> adoptions = instance.getItemIds();
 				updateLatents(adoptions, uIndex);
-				PsTableGroup.clock();
 			}
+			PsTableGroup.clock();
+			
 			// for each period, Evaluate and record total log likelihood of users in [userBegin, userEnd)  
 			if (workerRank == 0) {
 				if (iter % period == 0) {// iteration is a multiple of period
