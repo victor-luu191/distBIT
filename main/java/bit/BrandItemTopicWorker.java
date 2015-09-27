@@ -151,17 +151,27 @@ public class BrandItemTopicWorker implements Runnable {
 		saveLearnedDists(0);
 		
 		double max = Double.NEGATIVE_INFINITY;
+		
 		for (int r = 1; r < numRestart; r++) {
-			
 			System.out.println("Restart " + r);
-			// Empty latent lists (to put in new latents later) and reset counts to 0
-			emptyLatents(userBegin, userEnd);
-			toZeroCounts(userBegin, userEnd);
+			// Reset counts to 0, let only one worker do this, otherwise neg counts will occur as one count can be reduced too many times
+			if (workerRank == 0) {
+				toZeroCounts();
+			}
 			PsTableGroup.globalBarrier();
+			if (workerRank == 0) {
+				printCounts();
+			}
+			
+			// Empty latent lists (to put in new latents later) 
+			emptyLatents(userBegin, userEnd);
 			
 			resetLatentsAndCounts(userBegin, userEnd);
 			PsTableGroup.globalBarrier();
-				
+			if (workerRank == 0) {
+				printCounts();
+			}
+			
 			initTimeElapsed = System.currentTimeMillis() - initBegin;
 			if (workerRank == 0) {
 				logger.info("Reset done after " + initTimeElapsed + "ms");
@@ -178,9 +188,9 @@ public class BrandItemTopicWorker implements Runnable {
 		}
 	}
 
-	private void toZeroCounts(int userBegin, int userEnd) {
+	private void toZeroCounts() {
 		
-		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
+		for (int uIndex = 0; uIndex < dims.numUser; uIndex++) {
 			// set to 0 all topic counts of the user, including marginal counts
 			toZeros(dims.numTopic + 1, uIndex, countTables.topicUser);
 			// set to 0 all decision counts of the user, including marginal counts
@@ -205,7 +215,6 @@ public class BrandItemTopicWorker implements Runnable {
 	}
 	
 	private void resetLatentsAndCounts(int userBegin, int userEnd) {
-		// TODO Auto-generated method stub
 		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
 			resetLatentsAndCountsOfUser(uIndex);
 		}
@@ -217,6 +226,11 @@ public class BrandItemTopicWorker implements Runnable {
 		Dimensions dims = countTables.dims;
 		AdoptHistory adoptHistory = ds.histories.get(uIndex);
 		ArrayList<String> adoptions = adoptHistory.getItemIds();
+		
+		// Add margin counts to tables topicUser and decisionUser 
+		// both margin counts equal to number of adopts of the user
+		countTables.topicUser.inc(dims.numTopic, uIndex, adoptions.size());
+		countTables.decisionUser.inc(Dimensions.numDecision, uIndex, adoptions.size());
 		
 		for (int i=0; i < adoptions.size(); i++) {
 			int itemIndex = ds.itemDict.lookupIndex(new Item(adoptions.get(i)));
@@ -307,10 +321,10 @@ public class BrandItemTopicWorker implements Runnable {
 			}
 		}
 		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
-		long burnInElapsed = System.currentTimeMillis() - burnInBegin;
-		if (workerRank == 0) {
-			logger.info("burnIn elapsed " + burnInElapsed + "ms");
-		}
+//		long burnInElapsed = System.currentTimeMillis() - burnInBegin;
+//		if (workerRank == 0) {
+//			logger.info("burnIn elapsed " + burnInElapsed + "ms");
+//		}
 		
 		
 		// Training period
@@ -422,7 +436,7 @@ public class BrandItemTopicWorker implements Runnable {
 		latents.decisions.put(uIndex, new ArrayList<Integer>());
 		
 		// Add margin counts to tables topicUser and decisionUser 
-		// both equal to number of adopts of the user
+		// both margin counts equal to number of adopts of the user
 		countTables.topicUser.inc(dims.numTopic, uIndex, adoptions.size());
 		countTables.decisionUser.inc(Dimensions.numDecision, uIndex, adoptions.size());
 		
