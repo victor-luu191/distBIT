@@ -89,7 +89,6 @@ public class BrandItemTopic extends PsApplication {
 		
 		// Create count tables (containers of counts) with proper dimensions
 		createCountTables(dims);
-		
 
 		bitConfig.allPairs = buildPairs(dims.numBrand);
 		

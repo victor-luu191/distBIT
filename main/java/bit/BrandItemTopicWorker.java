@@ -153,24 +153,22 @@ public class BrandItemTopicWorker implements Runnable {
 		double max = Double.NEGATIVE_INFINITY;
 		
 		for (int r = 1; r < numRestart; r++) {
-			System.out.println("Restart " + r);
-			// Reset counts to 0, let only one worker do this, otherwise neg counts will occur as one count can be reduced too many times
+			
+//			Reset counts to 0, 
+//			let only one worker do this, otherwise neg counts will occur 
+//			as one count can be reduced too many times
+			PsTableGroup.globalBarrier();
 			if (workerRank == 0) {
+				System.out.println("Restart " + r);
 				toZeroCounts();
 			}
 			PsTableGroup.globalBarrier();
-			if (workerRank == 0) {
-				printCounts();
-			}
 			
 			// Empty latent lists (to put in new latents later) 
 			emptyLatents(userBegin, userEnd);
 			
 			resetLatentsAndCounts(userBegin, userEnd);
 			PsTableGroup.globalBarrier();
-			if (workerRank == 0) {
-				printCounts();
-			}
 			
 			totalLL = runSampler();
 			saveLearnedDists(r);
@@ -300,8 +298,7 @@ public class BrandItemTopicWorker implements Runnable {
 	}
 
 	private double runSampler() {
-		// Burn-in period
-		long burnInBegin = System.currentTimeMillis();
+		// Burn-in
 		for (int iter=0; iter < burnIn; iter++) {
 			for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
 				AdoptHistory history = ds.histories.get(uIndex);
@@ -313,17 +310,10 @@ public class BrandItemTopicWorker implements Runnable {
 			
 			// Print out likelihood to see improvements over uniform distributions
 			if (workerRank == 0) {
-				if (iter % period == 0) {// iteration is a multiple of period
-					printLL(iter);
-				}
+				printLL(iter);
 			}
 		}
 		PsTableGroup.globalBarrier();	// sync all count tables to get a better guesses thanks to burn-in
-//		long burnInElapsed = System.currentTimeMillis() - burnInBegin;
-//		if (workerRank == 0) {
-//			logger.info("burnIn elapsed " + burnInElapsed + "ms");
-//		}
-		
 		
 		// Training period
 //		long trainBegin = System.currentTimeMillis();
@@ -336,11 +326,9 @@ public class BrandItemTopicWorker implements Runnable {
 			}
 			PsTableGroup.clock();
 			
-			// for each period, Evaluate and record total log likelihood of users in [userBegin, userEnd)  
+			// For each period, evaluate and record total log likelihood of users in [userBegin, userEnd)  
 			if (workerRank == 0) {
-				if (iter % period == 0) {// iteration is a multiple of period
-					totalLL = printLL(iter);
-				}
+				totalLL = printLL(iter);
 			}
 		}
 		return totalLL;
@@ -348,8 +336,7 @@ public class BrandItemTopicWorker implements Runnable {
 
 	private double printLL(int iter) {
 		
-		int snapshot = iter/period;
-		
+//		int snapshot = iter/period;
 		Distributions dists = toDistributions(countTables, priors);
 		double totalLL = 0f;
 		for (int uIndex = userBegin; uIndex < userEnd; uIndex++) {
@@ -358,8 +345,13 @@ public class BrandItemTopicWorker implements Runnable {
 			totalLL += llOfUserData;
 			
 		}
-		llRecorder.incLoss(snapshot, "snapshot", snapshot);
-		llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
+		llRecorder.incMetric(iter, "iter", iter);
+		llRecorder.incMetric(iter, "logLikelihood", totalLL);
+		llRecorder.printOneMetric(iter);
+		
+//		llRecorder.incLoss(snapshot, "snapshot", snapshot);
+//		llRecorder.incLoss(snapshot, "logLikelihood", totalLL);
+//		llRecorder.printOneLoss(snapshot);
 		return totalLL;
 	}
 

@@ -48,7 +48,7 @@ public class LikelihoodRecorder {
 	        return -1;
 	    }
 
-	    public void incLoss(int ith, String fieldname, double val) {
+	    public void incMetric(int ith, String fieldname, double val) {
 	        if (lossTable == null) {
 	            lossTable = PsTableGroup.getDoubleTable(kLossTableId);
 	        }
@@ -87,7 +87,7 @@ public class LikelihoodRecorder {
 	        return header + stats;
 	    }
 
-	    public String printOneLoss(int ith) {
+	    public String printOneMetric(int ith) {
 	        if (lossTable == null) {
 	            lossTable = PsTableGroup.getDoubleTable(kLossTableId);
 	        }
