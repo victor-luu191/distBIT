@@ -1,88 +1,424 @@
-commit 4eba447671f69e2a2104533b3bccec6051c866f7
+commit 1464888
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 29 16:03:53 2015 +0800
+
+    Change updaters, all now update from current values of latent vars
+
+commit f042e4c
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 29 14:38:16 2015 +0800
+
+    Rm printing ll by period. Now print for all iterations
+
+commit 3556a40
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 27 23:20:05 2015 +0800
+
+    Change from clock() after each user's latents are updated to clock() after each worker has finished its works
+
+commit fe101fc
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 27 22:47:16 2015 +0800
+
+    Reseting counts to 0 works
+
+commit 0cb0975
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 27 11:58:56 2015 +0800
+
+    STeps of Restart: emptyLatents(), reset counts to 0, reset latents and counts to new values
+
+commit a95f969
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 27 11:00:58 2015 +0800
+
+    Fixing way of restarting the model. Added resetLatents().
+
+commit b4b2790
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 27 01:16:16 2015 +0800
+
+    Adding training with different restarts to choose the best local optimum
+
+commit 45a185c
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sun Sep 27 00:20:36 2015 +0800
+
+    2nd runnable version, hahahaa
+
+commit df4761a
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sat Sep 26 19:31:35 2015 +0800
+
+    No more Nan or negative counts, algorithm converge. Check with more syn ds
+
+commit 31625a2
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sat Sep 26 19:21:49 2015 +0800
+
+    Fix Nan on computing probs, the bug happens when all counts are 0, then margin count also 0 and lead to 0 divide 0 bug
+
+commit e5e2891
+Author: minhduc <musketeer191@gmail.com>
+Date:   Sat Sep 26 18:12:58 2015 +0800
+
+    Fix NAN in itemBrand counts
+
+commit bebfdfe
+Author: minhduc <musketeer191@gmail.com>
+Date:   Fri Sep 25 17:28:11 2015 +0800
+
+    All initialization of tables are correct
+
+commit ae89c89
+Author: minhduc <musketeer191@gmail.com>
+Date:   Fri Sep 25 16:00:36 2015 +0800
+
+    Refactor: move class CountTables to main pkg bit
+
+commit 34763bb
+Author: minhduc <musketeer191@gmail.com>
+Date:   Fri Sep 25 15:52:26 2015 +0800
+
+    Add missed counts in initializing counts: topicUser counts
+
+commit 1e0eaf7
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 24 23:29:02 2015 +0800
+
+    Fix dim mismatch by getting topic counts of user thru column not row
+
+commit a866ae1
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 24 22:36:45 2015 +0800
+
+    Finish brandBasedLikelihood(), thus finish eval log likelihood
+
+commit 3b6c7f2
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 24 22:22:31 2015 +0800
+
+    Finish topicBasedLikelihood()
+
+commit f318d6e
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 24 22:00:45 2015 +0800
+
+    Finish compFreqAdopts()
+
+commit e9d7a58
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 24 21:33:57 2015 +0800
+
+    Build outline of evalLikelihood(). Next: fill in helper methods
+
+commit c1601c6
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 24 15:59:54 2015 +0800
+
+    Rm redundant imports
+
+commit 6cd63ab
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 24 15:57:13 2015 +0800
+
+    Minor changes after 1st runnable version
+
+commit 28d3441
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 24 15:18:44 2015 +0800
+
+    First runnable version, hahaaa
+
+commit 71364e1
+Author: minhduc <musketeer191@gmail.com>
+Date:   Thu Sep 24 14:23:58 2015 +0800
+
+    Fix converter.toVector(): advance() to next element and reassign after appending element to vector
+
+commit 6f724cc
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 22:06:59 2015 +0800
+
+    Fix type mismatch upon looking up in itemDict using itemId (string) instead an Item obj
+
+commit ddf6b3d
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 21:45:17 2015 +0800
+
+    Fix wrong dimensions in table due to transpose
+
+commit 08cfdc2
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 21:27:45 2015 +0800
+
+    No more null dims
+
+commit e70ff3e
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 21:14:04 2015 +0800
+
+    Fixed null pointer exception when retrieve tables, but dims are still null
+
+commit 70510b1
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 16:21:29 2015 +0800
+
+    Add computing probs from counts
+
+commit d331eb4
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 16:06:58 2015 +0800
+
+    Rm ungranted throwing exception in BIT's initialize()
+
+commit b29e4be
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 15:45:37 2015 +0800
+
+    Finished loadAdopts()
+
+commit 59d514a
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 14:51:17 2015 +0800
+
+    Refactored Instance to AdoptHistory
+
+commit 857bb4d
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 14:47:38 2015 +0800
+
+    Finish buildItemAndBrandDicts() from raw data. Remains: loadAdopts()
+
+commit ba85d78
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 14:16:26 2015 +0800
+
+    Store producers of an item in a list, easy to convert to/from array
+
+commit f7810ec
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 14:03:08 2015 +0800
+
+    Move checking item-brand relation to Item cls
+
+commit 88fd2b7
+Author: minhduc <musketeer191@gmail.com>
+Date:   Wed Sep 23 12:01:25 2015 +0800
+
+    Add class DataReader; finish flow of main class BIT. Remaining is details of loading data and computing loss
+
+commit 17532d5
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 22:42:41 2015 +0800
+
+    rm last syntax bug
+
+commit cf3bbc0
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 22:41:05 2015 +0800
+
+    Finished toProbs(...); rm all syntax bugs
+
+commit 63d9ac1
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 22:25:47 2015 +0800
+
+    Moved priors and allPairs to main class BIT as the arguments should be global; coding toProbs()
+
+commit 1348daf
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 20:13:11 2015 +0800
+
+    Finish distribution writer
+
+commit 3a0c579
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 18:23:24 2015 +0800
+
+    Finished calls to write resulting distributions to disk; fill in details for the writer and the converter from counts to probs (by normalize)
+
+commit e034dc5
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 17:51:08 2015 +0800
+
+    Finished saving topicUser count table
+
+commit e606d6a
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 16:49:40 2015 +0800
+
+    Finished all methods in worker class of BIT except for outputCsvToDisk
+
+commit 1a481e7
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 16:24:55 2015 +0800
+
+    Finished runWorkerThread() in main class BrandItemTopic
+
+commit 6b881a9
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 15:58:48 2015 +0800
+
+    Also add burn-in period in the running process of worker
+
+commit 08e473b
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 15:52:38 2015 +0800
+
+    Finish initialize() in main class BrandItemTopic and default config for workers of BIT
+
+commit 4faa756
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 12:17:39 2015 +0800
+
+    Add LossRecorder class
+
+commit b448926
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 12:04:00 2015 +0800
+
+    Add default config for a worker as a static class Config nested in worker class
+
+commit 8426282
+Author: minhduc <musketeer191@gmail.com>
+Date:   Tue Sep 22 10:52:24 2015 +0800
+
+    make dims global as a field in global object countTables; add constructor for countTables
+
+commit 716e924
+Author: minhduc <musketeer191@gmail.com>
+Date:   Mon Sep 21 21:58:08 2015 +0800
+
+    Add updating latent vars, rm redundant fields countTables and assigns
+
+commit 19a193e
+Author: minhduc <musketeer191@gmail.com>
+Date:   Mon Sep 21 21:47:40 2015 +0800
+
+    Converted all methods in BrandItemTopicCore to static
+
+commit 2a4af58
+Author: minhduc <musketeer191@gmail.com>
+Date:   Mon Sep 21 20:55:32 2015 +0800
+
+    For each worker, created local tables  to store latent vars with which the worker is manipulating
+
+commit b1d99c3
+Author: minhduc <musketeer191@gmail.com>
+Date:   Mon Sep 21 18:10:54 2015 +0800
+
+    Add initializing latents to each worker
+
+commit fad1e8f
+Author: minhduc <musketeer191@gmail.com>
+Date:   Mon Sep 21 17:47:42 2015 +0800
+
+    Bf change data struct of class Assignments to Table struct in petuum
+
+commit a0f4941
+Author: minhduc <musketeer191@gmail.com>
+Date:   Mon Sep 21 17:05:43 2015 +0800
+
+    Divide initialization among workers, each worker initializes count tables for a certain number of users
+
+commit 2658c63
+Author: minhduc <musketeer191@gmail.com>
+Date:   Mon Sep 21 15:18:28 2015 +0800
+
+    Moved initializers to worker class,since each worker takes care of a partition of count tables
+
+commit 78c46ca
+Author: minhduc <musketeer191@gmail.com>
+Date:   Mon Sep 21 10:33:12 2015 +0800
+
+    Add a logger to class BrandItemTopic
+
+commit 4eba447
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sun Sep 20 21:23:41 2015 +0800
 
     corrected all remaining methods in BrandItemTopicCore class
 
-commit 11672739f74868a314cf8e51c645946d6ee24570
+commit 1167273
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sun Sep 20 21:20:06 2015 +0800
 
     corrected estTopicBased() in BrandItemTopicCore class
 
-commit 7125a0ea01a7b914d4fbaddcef48da7e0de81342
+commit 7125a0e
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sun Sep 20 18:31:58 2015 +0800
 
     corrected estWeights() in BrandItemTopicCore class
 
-commit 9ec3b291bfcd6a14e8f6cd01317c3034230d4960
+commit 9ec3b29
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sun Sep 20 18:22:08 2015 +0800
 
     included marginal counts as last row in count tables, removed redundant marginal count vars
 
-commit 0703b8f44977c2b2f143d6352cc1b4521288195f
+commit 0703b8f
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sun Sep 20 18:17:51 2015 +0800
 
     corrected incPairCount() in CountTables class
 
-commit b6df695c86853f77af5600e11b647d90115876d0
+commit b6df695
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sun Sep 20 18:12:00 2015 +0800
 
     corrected decPairCount() in CountTables class
 
-commit aa406964f7ecbca1fcef1909ad4bb177b175e726
+commit aa40696
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sun Sep 20 18:01:51 2015 +0800
 
     corrected incTopicCount() in CountTables class
 
-commit 904eeb332bf69c986cc58bbfd2b0fb1bc42fbe69
+commit 904eeb3
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sun Sep 20 17:56:09 2015 +0800
 
     corrected decTopicCount() in CountTables class
 
-commit ba44903df2a505a325c3a4236412d41f5058e625
+commit ba44903
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sun Sep 20 00:13:52 2015 +0800
 
     now last row in each count table contains marginal counts of columns
 
-commit eabe0329623bf876b315a30649843930b3114082
+commit eabe032
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sat Sep 19 23:01:46 2015 +0800
 
     change visibility of count tables (fields in CountTables class) to public for cross-pkg access
 
-commit 563ff94fb993bb812b182ca073912757ab251dfb
+commit 563ff94
 Author: minhduc <musketeer191@gmail.com>
 Date:   Sat Sep 19 22:20:00 2015 +0800
 
     rename Converters.toTable() to Converters.copy2Table
 
-commit bae38315388ba910d540f77e0ea220364a04e4f1
+commit bae3831
 Author: minhduc <musketeer191@gmail.com>
 Date:   Fri Sep 18 11:27:07 2015 +0800
 
     filled in details of converters, not tested yet
 
-commit 33de6100ab91f7f8cabee25ff469c13405052258
+commit 33de610
 Author: minhduc <musketeer191@gmail.com>
 Date:   Thu Sep 17 20:24:58 2015 +0800
 
     finished BrandItemTopicCore.java: core methods as well as helpers
 
-commit d9d01cb660b92e52ebdecd80ed237ddc5e7234e5
+commit d9d01cb
 Author: minhduc <musketeer191@gmail.com>
 Date:   Thu Sep 17 15:32:13 2015 +0800
 
     finished sampling methods in BrandItemTopicCore.java, only helper methods remaining
 
-commit 67f66bc6e2ecaf31eb1bf69f1d050d7366327874
+commit 67f66bc
 Author: minhduc <musketeer191@gmail.com>
 Date:   Thu Sep 17 14:00:53 2015 +0800
 

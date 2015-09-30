@@ -34,13 +34,13 @@ public class BrandItemTopicConfig extends PsConfig {
 	public String outputPrefix = "";
 	
 	@Option(name = "-alpha", required = false, usage = "topic-brand prior")
-	public double alpha = 0.1;
+	public double alpha = 0.0001;
 	
 	@Option(name = "-beta", required = false, usage = "brand-item prior")
-	public double beta = 0.1; 
+	public double beta = 0.001; 
 	
 	@Option(name = "-gamma", required = false, usage = "user-decision prior")
-	public double gamma = 0.1;	// correct default? 
+	public double gamma = 0.01;	// correct default? 
 	
 	@Option(name = "-theta", required = false, usage = "user-topic prior")
 	public double theta = 0.1; 
@@ -56,6 +56,9 @@ public class BrandItemTopicConfig extends PsConfig {
 	
 	@Option(name = "-numRestart", required = false, usage = "Number of restarts for training BIT. Default = 10")
 	public int numRestart = 10;
+
+	@Option(name = "numBrandPerTopic", required = false, usage = "Number of brands pre-assigned to each topic. Default = 2")
+	public int numBrandPerTopic = 2;
 	
 //	@Option(name = "-seed", required = false, usage = "Seed for the sampler. Default = 123")
 //	public int seed = 123;

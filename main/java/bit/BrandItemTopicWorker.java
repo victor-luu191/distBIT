@@ -119,7 +119,7 @@ public class BrandItemTopicWorker implements Runnable {
         // workerId
         this.workerRank = workerRank;
         
-        llRecorder.registerField("snapshot");
+        llRecorder.registerField("iter");
         llRecorder.registerField("logLikelihood");
         this.outputPrefix = config.outputPrefix;
         this.numRestart = config.numRestart;
@@ -150,36 +150,27 @@ public class BrandItemTopicWorker implements Runnable {
 		double totalLL = runSampler();
 		saveLearnedDists(0);
 		
-		double max = Double.NEGATIVE_INFINITY;
-		
-		for (int r = 1; r < numRestart; r++) {
-			
-//			Reset counts to 0, 
-//			let only one worker do this, otherwise neg counts will occur 
-//			as one count can be reduced too many times
-			PsTableGroup.globalBarrier();
-			if (workerRank == 0) {
-				System.out.println("Restart " + r);
-				toZeroCounts();
-			}
-			PsTableGroup.globalBarrier();
-			
-			// Empty latent lists (to put in new latents later) 
-			emptyLatents(userBegin, userEnd);
-			
-			resetLatentsAndCounts(userBegin, userEnd);
-			PsTableGroup.globalBarrier();
-			
-			totalLL = runSampler();
-			saveLearnedDists(r);
-			
-//			if (totalLL > max) {
-//				max = totalLL;
-//				saveLearnedDists(r);
+//		for (int r = 1; r < numRestart; r++) {
+//			
+////			Reset counts to 0, 
+////			let only one worker do this, otherwise neg counts will occur 
+////			as one count can be reduced too many times
+//			PsTableGroup.globalBarrier();
+//			if (workerRank == 0) {
+//				System.out.println("Restart " + r);
+//				toZeroCounts();
 //			}
-			
-			
-		}
+//			PsTableGroup.globalBarrier();
+//			
+//			// Empty latent lists (to put in new latents later) 
+//			emptyLatents(userBegin, userEnd);
+//			
+//			resetLatentsAndCounts(userBegin, userEnd);
+//			PsTableGroup.globalBarrier();
+//			
+//			totalLL = runSampler();
+//			saveLearnedDists(r);
+//		}
 	}
 
 	private void toZeroCounts() {
@@ -287,7 +278,7 @@ public class BrandItemTopicWorker implements Runnable {
 		    logger.info("\n" + printExpDetails() + "\n" +
 		            llRecorder.printAllLoss());
 		    
-		    String prefix = outputPrefix + ("_restart" + r);
+		    String prefix = outputPrefix + ("_restart" + r) + "_" + numIter + "iter";
 		    try {
 				outputCsvToDisk(distributions, prefix);
 			} catch (Exception e) {

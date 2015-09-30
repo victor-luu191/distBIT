@@ -87,6 +87,8 @@ public class BrandItemTopic extends PsApplication {
 				+ "The dataset has " + dims.numUser + " users, " + dims.numItem + " items and " + 
 				dims.numBrand + " brands. Loading finished after " + loadTimeElapsed + "ms.");
 		
+		assignBrands2Topics(config.numBrandPerTopic);
+		
 		// Create count tables (containers of counts) with proper dimensions
 		createCountTables(dims);
 
