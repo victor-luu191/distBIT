@@ -60,6 +60,8 @@ public class BrandItemTopicWorker implements Runnable {
 
 	private int numRestart;
 
+	private int numBrandPerTopic;
+
 	// default config
 	public static class Config {
 		public int numWorkers = -1;
@@ -87,6 +89,7 @@ public class BrandItemTopicWorker implements Runnable {
 		public Dimensions dims = new Dimensions();
 		public int period = 10;
 		public int numRestart = 10;
+		public int numBrandPerTopic = 2;
 	}
 	
 	public BrandItemTopicWorker(Config config, int workerRank) {
@@ -123,6 +126,7 @@ public class BrandItemTopicWorker implements Runnable {
         llRecorder.registerField("logLikelihood");
         this.outputPrefix = config.outputPrefix;
         this.numRestart = config.numRestart;
+        this.numBrandPerTopic = config.numBrandPerTopic;
 	}
 
 	public void run() {
@@ -146,6 +150,7 @@ public class BrandItemTopicWorker implements Runnable {
 		long initTimeElapsed = System.currentTimeMillis() - initBegin;
 		if (workerRank == 0) {
 			logger.info("Initialization done after " + initTimeElapsed + "ms");
+			printCounts();
 		}
 		double totalLL = runSampler();
 		saveLearnedDists(0);
@@ -278,7 +283,7 @@ public class BrandItemTopicWorker implements Runnable {
 		    logger.info("\n" + printExpDetails() + "\n" +
 		            llRecorder.printAllLoss());
 		    
-		    String prefix = outputPrefix + ("_restart" + r) + "_" + numIter + "iter";
+		    String prefix = outputPrefix + "_" + numIter + "iter";
 		    try {
 				outputCsvToDisk(distributions, prefix);
 			} catch (Exception e) {
@@ -441,7 +446,15 @@ public class BrandItemTopicWorker implements Runnable {
 				
 			} else {
 				countTables.decisionUser.inc(1, uIndex, 1);
-				int brandIndex = random.nextInt(dims.numBrand);
+				// Choose uniformly from only a fixed subset of brands
+				// to ensure that the set of brands of this topic is disjoint from brand sets of other topics
+				// Simple way: topic k only contains brands [km. (k+1)m) where m is the number of brand per topic
+				int brandIndex = random.nextInt(numBrandPerTopic) + topicIndex * numBrandPerTopic;
+				
+//				Choose uniformly from all brands,
+//				int brandIndex = random.nextInt(dims.numBrand);
+				
+				
 				latents.brands.get(uIndex).add(brandIndex);
 				
 				countTables.brandTopic.inc(brandIndex, topicIndex, 1);

@@ -45,6 +45,8 @@ public class BrandItemTopic extends PsApplication {
 		
 		bitConfig.outputPrefix = config.outputPrefix;
 		bitConfig.numRestart = config.numRestart;
+		
+		bitConfig.numBrandPerTopic = config.numBrandPerTopic;
 	}
 
 	public static void main(String[] args) {
@@ -78,6 +80,7 @@ public class BrandItemTopic extends PsApplication {
 		// load data and record dimensions: numUser, numItem, numBrand
 		Dimensions dims = DataReader.loadData(config.dataDir, ds);	 
 		dims.numTopic = config.numTopic;
+		dims.numBrand = dims.numTopic * config.numBrandPerTopic ;
 		bitConfig.dims = dims;	// collect all dimensions to pass to workers
 		
 		bitConfig.ds = ds;	// share data set among workers
@@ -87,7 +90,7 @@ public class BrandItemTopic extends PsApplication {
 				+ "The dataset has " + dims.numUser + " users, " + dims.numItem + " items and " + 
 				dims.numBrand + " brands. Loading finished after " + loadTimeElapsed + "ms.");
 		
-		assignBrands2Topics(config.numBrandPerTopic);
+//		assignBrands2Topics(config.numBrandPerTopic);
 		
 		// Create count tables (containers of counts) with proper dimensions
 		createCountTables(dims);
