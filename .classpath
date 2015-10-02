@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/test/java"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry exported="true" kind="con" path="org.springsource.ide.eclipse.gradle.classpathcontainer"/>
+	<classpathentry kind="src" path="/jbosen-jbosen"/>
+	<classpathentry kind="lib" path="commons-math3-3.3.jar"/>
+	<classpathentry kind="lib" path="mallet.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/mdluu.2011/.gradle/caches/modules-2/files-2.1/org.apache.hadoop/hadoop-common/2.6.0/a3f6d9827e9813a0fb286ebc0d3ae8cffed17105/hadoop-common-2.6.0.jar" sourcepath="C:/Users/mdluu.2011/.gradle/caches/modules-2/files-2.1/org.apache.hadoop/hadoop-common/2.6.0/54a5f12a248a4d02491a11a08ca8c87d7d07e2a9/hadoop-common-2.6.0-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/mdluu.2011/.gradle/caches/modules-2/files-2.1/org.apache.hadoop/hadoop-hdfs/2.6.0/9e25d4ea9daab5d0b7fbbe1749790aef3280ff35/hadoop-hdfs-2.6.0.jar" sourcepath="C:/Users/mdluu.2011/.gradle/caches/modules-2/files-2.1/org.apache.hadoop/hadoop-hdfs/2.6.0/6b74f53ad6b7fff9aac5e8e580c5389e6263ee3f/hadoop-hdfs-2.6.0-sources.jar"/>
+	<classpathentry kind="lib" path="trove-2.0.2.jar"/>
+	<classpathentry kind="lib" path="commons-collections-3.2.1.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
