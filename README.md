@@ -1,6 +1,6 @@
 # distBIT
 This repo contains:
-+ source code for distributed implementation of BIT model
++ source code for distributed implementation of BIT (topic-brand-item) model
 + synthetic datasets
 + results of training distBIT on some synthetic datasets
 
