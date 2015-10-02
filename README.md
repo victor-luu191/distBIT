@@ -11,7 +11,7 @@ Below are steps
 + Add jar files in folder libs to build path
 + Import and build src as a Gradle project
 
-## Run the app
+### Run the app
 Run the app from `main()` method in BrandItemTopic.java. You can run the app using default configs (can be found in `BrandItemTopicConfig.java`) but you __must provide the directory of data__ (via `-dataDir`). You can also reset other arguments (a list of all arguments can be found in `BrandItemTopicConfig.java`) by setting a run configuration in Run menu of Eclipse.
 
 Example configurations:
