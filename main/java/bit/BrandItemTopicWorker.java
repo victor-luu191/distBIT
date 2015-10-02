@@ -150,32 +150,32 @@ public class BrandItemTopicWorker implements Runnable {
 		long initTimeElapsed = System.currentTimeMillis() - initBegin;
 		if (workerRank == 0) {
 			logger.info("Initialization done after " + initTimeElapsed + "ms");
-			printCounts();
+//			printCounts();
 		}
 		double totalLL = runSampler();
 		saveLearnedDists(0);
 		
-//		for (int r = 1; r < numRestart; r++) {
-//			
-////			Reset counts to 0, 
-////			let only one worker do this, otherwise neg counts will occur 
-////			as one count can be reduced too many times
-//			PsTableGroup.globalBarrier();
-//			if (workerRank == 0) {
-//				System.out.println("Restart " + r);
-//				toZeroCounts();
-//			}
-//			PsTableGroup.globalBarrier();
-//			
-//			// Empty latent lists (to put in new latents later) 
-//			emptyLatents(userBegin, userEnd);
-//			
-//			resetLatentsAndCounts(userBegin, userEnd);
-//			PsTableGroup.globalBarrier();
-//			
-//			totalLL = runSampler();
-//			saveLearnedDists(r);
-//		}
+		for (int r = 1; r < numRestart; r++) {
+			
+//			Reset counts to 0, 
+//			let only one worker do this, otherwise neg counts will occur 
+//			as one count can be reduced too many times
+			PsTableGroup.globalBarrier();
+			if (workerRank == 0) {
+				System.out.println("Restart " + r);
+				toZeroCounts();
+			}
+			PsTableGroup.globalBarrier();
+			
+			// Empty latent lists (to put in new latents later) 
+			emptyLatents(userBegin, userEnd);
+			
+			resetLatentsAndCounts(userBegin, userEnd);
+			PsTableGroup.globalBarrier();
+			
+			totalLL = runSampler();
+			saveLearnedDists(r);
+		}
 	}
 
 	private void toZeroCounts() {
@@ -283,7 +283,7 @@ public class BrandItemTopicWorker implements Runnable {
 		    logger.info("\n" + printExpDetails() + "\n" +
 		            llRecorder.printAllLoss());
 		    
-		    String prefix = outputPrefix + "_" + numIter + "iter";
+		    String prefix = outputPrefix + "restart" + r + "_" + numIter + "iter";
 		    try {
 				outputCsvToDisk(distributions, prefix);
 			} catch (Exception e) {

@@ -34,16 +34,16 @@ public class BrandItemTopicConfig extends PsConfig {
 	public String outputPrefix = "";
 	
 	@Option(name = "-alpha", required = false, usage = "topic-brand prior")
-	public double alpha = 1;
+	public double alpha = 0.01;
 	
 	@Option(name = "-beta", required = false, usage = "brand-item prior")
-	public double beta = 0.1; 
+	public double beta = 0.01; 
 	
 	@Option(name = "-gamma", required = false, usage = "user-decision prior")
 	public double gamma = 0.01;	// correct default? 
 	
 	@Option(name = "-theta", required = false, usage = "user-topic prior")
-	public double theta = 0.1; 
+	public double theta = 0.01; 
 	
 	@Option(name = "-phi", required = false, usage = "topic-item prior")
 	public double phi = 0.1; 

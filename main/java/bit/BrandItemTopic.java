@@ -1,18 +1,25 @@
 package bit;
 
+import java.io.IOException;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.petuum.jbosen.PsApplication;
 import org.petuum.jbosen.PsTableGroup;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+
+
+
+
 
 import defs.Dimensions;
 import defs.Pair;
 
 public class BrandItemTopic extends PsApplication {
 
-	private static final Logger logger = LoggerFactory.getLogger(BrandItemTopic.class);
+	private static final Logger logger = Logger.getLogger(BrandItemTopic.class.getName());
 	
 	BrandItemTopicConfig config ;
 	BrandItemTopicWorker.Config bitConfig;
@@ -49,14 +56,17 @@ public class BrandItemTopic extends PsApplication {
 		bitConfig.numBrandPerTopic = config.numBrandPerTopic;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws SecurityException, IOException {
+		
+		FileHandler fh = new FileHandler("bit_log.txt");
+		logger.addHandler(fh);
 		
 		final BrandItemTopicConfig  config = new BrandItemTopicConfig();
 		final CmdLineParser parser = new CmdLineParser(config);
 		try {
 			parser.parseArgument(args);
 		} catch (CmdLineException e) {
-			logger.error(e.getMessage());
+			logger.severe(e.getMessage());
 			parser.printUsage(System.err);
 			return;
 		}
